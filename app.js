@@ -810,6 +810,9 @@ function closeCheckoutModal() {
 function completeOrderPlacement(orderData) {
   closeCheckoutModal();
 
+  // Save order to store owner history for Dashboard
+  saveOrderToHistory(orderData);
+
   // Clear cart
   state.cart = [];
   saveCartToStorage();
@@ -835,6 +838,18 @@ function completeOrderPlacement(orderData) {
   renderOrderSuccessModal(orderData, whatsappUrl);
 
   showToast(`🎉 Order ${orderData.orderId} Placed! Sending WhatsApp Notification...`, "success");
+}
+
+// Save order to localStorage for Admin Dashboard
+function saveOrderToHistory(orderData) {
+  try {
+    const existingStr = localStorage.getItem("amma_ruchulu_all_orders");
+    const existing = existingStr ? JSON.parse(existingStr) : [];
+    existing.unshift(orderData);
+    localStorage.setItem("amma_ruchulu_all_orders", JSON.stringify(existing));
+  } catch (e) {
+    console.error("Error saving order to history", e);
+  }
 }
 
 // Format WhatsApp Message

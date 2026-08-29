@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | Amma Ruchulu (అమ్మ రుచులు)</title>
+  <link rel="icon" type="image/x-icon" href="images/hero.jpg" />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            cinzel: ['"Cinzel"', 'serif'],
+          },
+          colors: {
+            amma: {
+              red: '#9e1b0e',
+              redDark: '#7a1208',
+              gold: '#e59819',
+              goldLight: '#fef5e7',
+              orange: '#d9531e',
+              brown: '#3e2723',
+              cream: '#fffbf5',
+              green: '#1b5e20'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-section, #print-section * {
+        visibility: visible;
+      }
+      #print-section {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="bg-neutral-900 text-neutral-100 min-h-screen flex flex-col font-sans selection:bg-amber-500 selection:text-black">
+
+  <!-- ================= TOP NAVIGATION ================= -->
+  <header class="bg-neutral-950 border-b border-neutral-800 sticky top-0 z-30 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="flex items-center gap-2 group">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-red-600 flex items-center justify-center text-white shadow-md font-bold text-lg font-cinzel">
+            AR
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-cinzel font-extrabold text-base sm:text-lg text-amber-400 group-hover:text-amber-300 transition">
+                Amma Ruchulu
+              </h1>
+              <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider border border-amber-500/30">
+                Store Admin
+              </span>
+            </div>
+            <p class="text-[11px] text-neutral-400">Order Management & Kitchen Dispatch Dashboard</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button 
+          onclick="seedSampleOrders()" 
+          class="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold flex items-center gap-1.5 transition border border-neutral-700"
+          title="Add sample orders for testing"
+        >
+          <i data-lucide="plus-circle" class="w-4 h-4 text-amber-400"></i>
+          <span class="hidden sm:inline">Add Sample Orders</span>
+        </button>
+
+        <button 
+          onclick="exportOrdersToCSV()" 
+          class="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold flex items-center gap-1.5 transition border border-neutral-700"
+          title="Download orders as CSV spreadsheet"
+        >
+          <i data-lucide="download" class="w-4 h-4 text-emerald-400"></i>
+          <span class="hidden sm:inline">Export CSV</span>
+        </button>
+
+        <a 
+          href="index.html" 
+          target="_blank"
+          class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 text-xs font-black flex items-center gap-1.5 shadow-md transition"
+        >
+          <i data-lucide="external-link" class="w-4 h-4"></i>
+          <span>View Customer Store</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    
+    <!-- Header Greeting & Live Sync Status -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-neutral-950 via-neutral-900 to-neutral-950 p-6 rounded-3xl border border-neutral-800 shadow-lg">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="flex h-2.5 w-2.5 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Live Order Synchronization</span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-black text-white font-cinzel">
+          Orders & Kitchen Dispatch Overview
+        </h2>
+        <p class="text-xs text-neutral-400 mt-1">
+          Kitchen location: Sai Aishwarya Colony, Road No 1, Parvathapur, Hyderabad • Helpline: +91 8341643180
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button 
+          onclick="refreshDashboardData()" 
+          class="px-4 py-2.5 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold flex items-center gap-2 transition border border-neutral-700 shadow-sm"
+        >
+          <i data-lucide="refresh-cw" class="w-4 h-4 text-amber-400"></i>
+          <span>Refresh Data</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= 5 KPI STATS CARDS ================= -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      
+      <!-- 1. Total Orders -->
+      <div class="bg-neutral-950/80 p-5 rounded-2xl border border-neutral-800 flex flex-col justify-between shadow-md">
+        <div class="flex items-center justify-between text-neutral-400 mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider">Total Orders</span>
+          <div class="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+            <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div>
+          <div id="kpi-total-orders" class="text-2xl sm:text-3xl font-black text-white">0</div>
+          <p class="text-[11px] text-neutral-500 mt-0.5">All time orders placed</p>
+        </div>
+      </div>
+
+      <!-- 2. Pending Orders -->
+      <div class="bg-neutral-950/80 p-5 rounded-2xl border border-amber-500/30 bg-amber-950/10 flex flex-col justify-between shadow-md">
+        <div class="flex items-center justify-between text-amber-400 mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider">Pending</span>
+          <div class="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div>
+          <div id="kpi-pending-orders" class="text-2xl sm:text-3xl font-black text-amber-400">0</div>
+          <p class="text-[11px] text-amber-200/60 mt-0.5">Awaiting verification / dispatch</p>
+        </div>
+      </div>
+
+      <!-- 3. Processing / Preparing -->
+      <div class="bg-neutral-950/80 p-5 rounded-2xl border border-sky-500/30 bg-sky-950/10 flex flex-col justify-between shadow-md">
+        <div class="flex items-center justify-between text-sky-400 mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider">Preparing</span>
+          <div class="p-2 rounded-xl bg-sky-500/20 text-sky-400">
+            <i data-lucide="chef-hat" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div>
+          <div id="kpi-processing-orders" class="text-2xl sm:text-3xl font-black text-sky-400">0</div>
+          <p class="text-[11px] text-sky-200/60 mt-0.5">Kitchen packaging & packing</p>
+        </div>
+      </div>
+
+      <!-- 4. Completed Orders -->
+      <div class="bg-neutral-950/80 p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/10 flex flex-col justify-between shadow-md">
+        <div class="flex items-center justify-between text-emerald-400 mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider">Completed</span>
+          <div class="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
+            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div>
+          <div id="kpi-completed-orders" class="text-2xl sm:text-3xl font-black text-emerald-400">0</div>
+          <p class="text-[11px] text-emerald-200/60 mt-0.5">Delivered to customer</p>
+        </div>
+      </div>
+
+      <!-- 5. Total Revenue -->
+      <div class="col-span-2 sm:col-span-1 bg-gradient-to-br from-amber-950/40 via-neutral-950 to-neutral-950 p-5 rounded-2xl border border-amber-500/40 flex flex-col justify-between shadow-md">
+        <div class="flex items-center justify-between text-amber-400 mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider">Total Revenue</span>
+          <div class="p-2 rounded-xl bg-amber-400 text-neutral-950 font-black">
+            ₹
+          </div>
+        </div>
+        <div>
+          <div id="kpi-total-revenue" class="text-2xl sm:text-3xl font-black text-amber-300">₹0</div>
+          <p class="text-[11px] text-amber-200/60 mt-0.5">Gross sales value</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= ORDERS TABLE CONTAINER ================= -->
+    <div class="bg-neutral-950 rounded-3xl border border-neutral-800 shadow-xl overflow-hidden">
+      
+      <!-- Filter & Search Toolbar -->
+      <div class="p-5 sm:p-6 border-b border-neutral-800 space-y-4">
+        
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          
+          <!-- Search Bar -->
+          <div class="relative flex-1 max-w-md">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500"></i>
+            <input 
+              type="text" 
+              id="search-input" 
+              oninput="handleSearch(this.value)"
+              placeholder="Search by customer name, phone, order ID, or address..."
+              class="w-full pl-10 pr-4 py-2.5 bg-neutral-900 border border-neutral-700 rounded-2xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400 transition"
+            />
+          </div>
+
+          <!-- Status Filter Tabs -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0" id="status-filter-tabs">
+            <button onclick="setStatusFilter('all')" class="status-tab-btn active px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500 text-neutral-950 transition" data-filter="all">
+              All (<span id="count-tab-all">0</span>)
+            </button>
+            <button onclick="setStatusFilter('pending')" class="status-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 transition" data-filter="pending">
+              ⏳ Pending (<span id="count-tab-pending">0</span>)
+            </button>
+            <button onclick="setStatusFilter('processing')" class="status-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 transition" data-filter="processing">
+              🍳 Preparing (<span id="count-tab-processing">0</span>)
+            </button>
+            <button onclick="setStatusFilter('completed')" class="status-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 transition" data-filter="completed">
+              ✅ Completed (<span id="count-tab-completed">0</span>)
+            </button>
+            <button onclick="setStatusFilter('cancelled')" class="status-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 transition" data-filter="cancelled">
+              ❌ Cancelled (<span id="count-tab-cancelled">0</span>)
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Orders Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs text-neutral-300">
+          <thead class="bg-neutral-900/90 text-neutral-400 uppercase text-[11px] font-bold tracking-wider border-b border-neutral-800">
+            <tr>
+              <th scope="col" class="py-3.5 px-4">Order ID & Date</th>
+              <th scope="col" class="py-3.5 px-4">Customer & Phone</th>
+              <th scope="col" class="py-3.5 px-4">Delivery Address</th>
+              <th scope="col" class="py-3.5 px-4">Pickles Ordered</th>
+              <th scope="col" class="py-3.5 px-4">Bill & Payment</th>
+              <th scope="col" class="py-3.5 px-4">Order Status</th>
+              <th scope="col" class="py-3.5 px-4 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body" class="divide-y divide-neutral-800/60 font-sans">
+            <!-- Rendered by dashboard.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden p-12 text-center space-y-3">
+        <div class="w-14 h-14 bg-neutral-800 rounded-full flex items-center justify-center text-neutral-500 mx-auto">
+          <i data-lucide="inbox" class="w-7 h-7"></i>
+        </div>
+        <h3 class="font-bold text-sm text-neutral-300">No Orders Found</h3>
+        <p class="text-xs text-neutral-500 max-w-sm mx-auto">
+          There are no orders matching your current filter. You can click "Add Sample Orders" above to test the dashboard.
+        </p>
+        <button onclick="seedSampleOrders()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-xl text-xs transition">
+          Load Sample Orders
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ================= PRINTABLE KITCHEN SLIP / RECEIPT MODAL ================= -->
+  <div id="kitchen-slip-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white text-neutral-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-red-800 text-white flex items-center justify-center font-bold text-xs">AR</div>
+          <div>
+            <h3 class="font-cinzel font-bold text-sm text-red-900">Kitchen & Dispatch Slip</h3>
+            <p class="text-[10px] text-neutral-500">Amma Ruchulu - Parvathapur, Hyderabad</p>
+          </div>
+        </div>
+        <button onclick="closeKitchenSlipModal()" class="p-1 rounded-lg hover:bg-neutral-100 text-neutral-500">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Slip Body (Will be printed) -->
+      <div id="print-section" class="space-y-3 text-xs">
+        <!-- Rendered by dashboard.js -->
+      </div>
+
+      <div class="pt-3 border-t flex gap-2">
+        <button onclick="window.print()" class="flex-1 py-2.5 bg-neutral-900 hover:bg-black text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+          <i data-lucide="printer" class="w-4 h-4 text-amber-400"></i>
+          <span>Print Slip</span>
+        </button>
+        <button onclick="closeKitchenSlipModal()" class="px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold rounded-xl text-xs transition">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Dashboard Script -->
+  <script src="dashboard.js"></script>
+</body>
+</html>
