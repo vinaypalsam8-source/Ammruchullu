@@ -1,0 +1,219 @@
+/* ==========================================================================
+   Amma Ruchulu - Custom Styles & Culinary Theme
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Rozha+One&family=Yatra+One&display=swap');
+
+:root {
+  --primary-red: #9e1b0e;
+  --primary-red-dark: #7a1208;
+  --primary-red-light: #fbeae8;
+  --turmeric-gold: #e59819;
+  --turmeric-gold-light: #fef5e7;
+  --spicy-orange: #d9531e;
+  --earthy-brown: #3e2723;
+  --leaf-green: #1b5e20;
+  --cream-bg: #fffbf5;
+  --card-bg: #ffffff;
+  --text-main: #271e18;
+  --text-muted: #6b5c53;
+  --border-color: #f0e2d5;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--cream-bg);
+  color: var(--text-main);
+  scroll-behavior: smooth;
+}
+
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-traditional {
+  font-family: 'Rozha One', 'Cinzel', serif;
+}
+
+.font-indic {
+  font-family: 'Yatra One', cursive;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #fbf5ee;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4a373;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9e1b0e;
+}
+
+/* Texture Pattern */
+.bg-pattern {
+  background-color: #fffbf5;
+  background-image: radial-gradient(#e59819 0.75px, transparent 0.75px), radial-gradient(#9e1b0e 0.75px, #fffbf5 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, rgba(158, 27, 14, 0.96) 0%, rgba(122, 18, 8, 0.94) 50%, rgba(62, 39, 35, 0.98) 100%);
+}
+
+.glass-nav {
+  background: rgba(255, 251, 245, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(229, 152, 25, 0.2);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(229, 152, 25, 0.25);
+  box-shadow: 0 10px 30px -10px rgba(158, 27, 14, 0.08);
+}
+
+.product-card {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 35px -10px rgba(158, 27, 14, 0.18);
+  border-color: rgba(229, 152, 25, 0.6);
+}
+
+.product-card:hover .product-img {
+  transform: scale(1.06);
+}
+
+.product-img {
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Weight Selector Pill */
+.weight-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.weight-btn.active {
+  background: #9e1b0e;
+  color: #ffffff;
+  border-color: #9e1b0e;
+  box-shadow: 0 2px 8px rgba(158, 27, 14, 0.35);
+}
+
+/* Pulse Glow Animation */
+@keyframes pulse-gold {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(229, 152, 25, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(229, 152, 25, 0);
+  }
+}
+
+.glow-btn {
+  animation: pulse-gold 2.5s infinite;
+}
+
+/* Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-badge {
+  background: linear-gradient(90deg, #9e1b0e 0%, #d9531e 50%, #9e1b0e 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite linear;
+}
+
+/* Cart Drawer & Modals */
+.drawer-backdrop {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.drawer-content {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-content.closed {
+  transform: translateX(100%);
+}
+
+.drawer-content.open {
+  transform: translateX(0);
+}
+
+/* Float WhatsApp & Call Buttons */
+.floating-action {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.floating-action:hover {
+  transform: translateY(-4px) scale(1.05);
+}
+
+/* Toast Notifications */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  animation: slideInUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  transition: all 0.3s ease;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Print Styles for Invoices */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
