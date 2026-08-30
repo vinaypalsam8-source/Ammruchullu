@@ -527,21 +527,29 @@ function updateDirectOrderTotals() {
     }
   }
 
-  const orderTempId = `AR${Math.floor(100000 + Math.random() * 900000)}`;
-  const genericUpiUrl = `upi://pay?pa=${encodeURIComponent(STORE_CONFIG.upiId)}&pn=${encodeURIComponent("Amma Ruchulu")}&am=${totals.grandTotal}&cu=INR&tn=${encodeURIComponent("Amma Ruchulu Pickles " + orderTempId)}`;
-  const gpayUrl = `gpay://upi/pay?pa=${encodeURIComponent(STORE_CONFIG.upiId)}&pn=${encodeURIComponent("Amma Ruchulu")}&am=${totals.grandTotal}&cu=INR&tn=${encodeURIComponent("Amma Ruchulu " + orderTempId)}`;
-  const phonepeUrl = `phonepe://pay?pa=${encodeURIComponent(STORE_CONFIG.upiId)}&pn=${encodeURIComponent("Amma Ruchulu")}&am=${totals.grandTotal}&cu=INR&tn=${encodeURIComponent("Amma Ruchulu " + orderTempId)}`;
-  const paytmUrl = `paytmmp://pay?pa=${encodeURIComponent(STORE_CONFIG.upiId)}&pn=${encodeURIComponent("Amma Ruchulu")}&am=${totals.grandTotal}&cu=INR&tn=${encodeURIComponent("Amma Ruchulu " + orderTempId)}`;
+  // Standard NPCI Compliant UPI Deep Link (No double encoding for VPA)
+  const upiIdClean = STORE_CONFIG.upiId.trim();
+  const upiAmountVal = Number(totals.grandTotal).toFixed(2);
+  const upiPayeeName = encodeURIComponent("Amma Ruchulu");
+  const upiNote = encodeURIComponent("Amma Ruchulu Pickles");
+
+  // Format: upi://pay?pa=vinaypalsam@okaxis&pn=Amma%20Ruchulu&am=230.00&cu=INR&tn=Amma%20Ruchulu%20Pickles
+  const standardUpiUrl = `upi://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
+  const gpayUrl = `gpay://upi/pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
+  const phonepeUrl = `phonepe://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
+  const paytmUrl = `paytmmp://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
 
   if (qrDisplay) {
-    qrDisplay.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(genericUpiUrl)}&margin=10`;
+    // Generate crisp, high-contrast QR code
+    qrDisplay.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(standardUpiUrl)}&margin=12&format=png`;
+    qrDisplay.alt = `UPI QR Code for ${STORE_CONFIG.upiId} - Amount ₹${totals.grandTotal}`;
   }
 
   if (upiAmount) {
     upiAmount.textContent = `₹${totals.grandTotal}`;
   }
 
-  if (upiBtn) upiBtn.href = genericUpiUrl;
+  if (upiBtn) upiBtn.href = standardUpiUrl;
   if (gpayBtn) gpayBtn.href = gpayUrl;
   if (phonepeBtn) phonepeBtn.href = phonepeUrl;
   if (paytmBtn) paytmBtn.href = paytmUrl;
@@ -806,6 +814,30 @@ function openCheckoutModal() {
       </div>
     `;
   }
+
+  // Update Modal UPI QR & App Links
+  const modalQr = document.getElementById("modal-upi-qr");
+  const modalUpiAmount = document.getElementById("modal-upi-amount");
+  const modalGpay = document.getElementById("modal-gpay-btn");
+  const modalPhonepe = document.getElementById("modal-phonepe-btn");
+  const modalPaytm = document.getElementById("modal-paytm-btn");
+
+  const upiIdClean = STORE_CONFIG.upiId.trim();
+  const upiAmountVal = Number(totals.grandTotal).toFixed(2);
+  const upiPayeeName = encodeURIComponent("Amma Ruchulu");
+  const upiNote = encodeURIComponent("Amma Ruchulu Pickles");
+  const standardUpiUrl = `upi://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
+  const gpayUrl = `gpay://upi/pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
+  const phonepeUrl = `phonepe://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
+  const paytmUrl = `paytmmp://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
+
+  if (modalQr) {
+    modalQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(standardUpiUrl)}&margin=10&format=png`;
+  }
+  if (modalUpiAmount) modalUpiAmount.textContent = `₹${totals.grandTotal}`;
+  if (modalGpay) modalGpay.href = gpayUrl;
+  if (modalPhonepe) modalPhonepe.href = phonepeUrl;
+  if (modalPaytm) modalPaytm.href = paytmUrl;
 
   modal.classList.remove("hidden");
   modal.classList.add("flex");
