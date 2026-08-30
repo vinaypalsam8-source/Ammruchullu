@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Amma Ruchulu - E-Commerce Engine
  * Complete Real Payment Integration (UPI Intent, Razorpay, COD) + Instant Automated WhatsApp Notification
  */
 
 const STORE_CONFIG = {
-  name: "Amma Ruchulu (అమ్మ రుచులు)",
+  name: "Amma Ruchulu (à°…à°®à±à°® à°°à±à°šà±à°²à±)",
   phone: "8341643180",
   whatsappNumber: "918341643180",
   upiId: "vinaypalsam8@okaxis",
@@ -18,13 +18,13 @@ const PRODUCTS = [
   {
     id: "mango-pickle",
     name: "Avakaya Mango Pickle",
-    teluguName: "ఆవకాయ / మామిడికాయ పచ్చడి",
+    teluguName: "à°†à°µà°•à°¾à°¯ / à°®à°¾à°®à°¿à°¡à°¿à°•à°¾à°¯ à°ªà°šà±à°šà°¡à°¿",
     category: "veg",
     tagline: "The King of Andhra Pickles with Hand-Pounded Mustard & Cold-Pressed Sesame Oil",
-    badge: "Bestseller ★★★★★",
-    spiceLevel: "🔥🔥🔥 Fiery Andhra Spice",
+    badge: "Bestseller â˜…â˜…â˜…â˜…â˜…",
+    spiceLevel: "ðŸ”¥ðŸ”¥ðŸ”¥ Fiery Andhra Spice",
     shelfLife: "12 Months",
-    image: "images/mango_pickle.jpg",
+    image: "mango_pickle.jpg",
     fallbackImage: "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=600&auto=format&fit=crop&q=80",
     prices: {
       "250g": 120,
@@ -37,13 +37,13 @@ const PRODUCTS = [
   {
     id: "lemon-pickle",
     name: "Tangy Lemon Pickle",
-    teluguName: "నిమ్మకాయ పచ్చడి",
+    teluguName: "à°¨à°¿à°®à±à°®à°•à°¾à°¯ à°ªà°šà±à°šà°¡à°¿",
     category: "veg",
     tagline: "Sun-Ripened Juicy Lemons Cured in Aromatic Fenugreek & Mustard Oil",
     badge: "Grandma's Special",
-    spiceLevel: "🔥🔥 Tangy & Zesty",
+    spiceLevel: "ðŸ”¥ðŸ”¥ Tangy & Zesty",
     shelfLife: "12 Months",
-    image: "images/lemon_pickle.jpg",
+    image: "lemon_pickle.jpg",
     fallbackImage: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600&auto=format&fit=crop&q=80",
     prices: {
       "250g": 100,
@@ -56,13 +56,13 @@ const PRODUCTS = [
   {
     id: "usirikaya-pickle",
     name: "Usirikaya (Amla) Pickle",
-    teluguName: "ఉసిరికాయ పచ్చడి",
+    teluguName: "à°‰à°¸à°¿à°°à°¿à°•à°¾à°¯ à°ªà°šà±à°šà°¡à°¿",
     category: "veg",
     tagline: "Whole Wild Indian Gooseberries Tempered with Garlic & Aromatic Spices",
     badge: "Immunity Booster",
-    spiceLevel: "🔥🔥 Tangy & Spicy",
+    spiceLevel: "ðŸ”¥ðŸ”¥ Tangy & Spicy",
     shelfLife: "9 Months",
-    image: "images/usirikaya_pickle.jpg",
+    image: "usirikaya_pickle.jpg",
     fallbackImage: "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=600&auto=format&fit=crop&q=80",
     prices: {
       "250g": 130,
@@ -75,13 +75,13 @@ const PRODUCTS = [
   {
     id: "mutton-pickle",
     name: "Royal Mutton Pickle (Boneless)",
-    teluguName: "మటన్ పచ్చడి (బోన్‌లెస్)",
+    teluguName: "à°®à°Ÿà°¨à± à°ªà°šà±à°šà°¡à°¿ (à°¬à±‹à°¨à±â€Œà°²à±†à°¸à±)",
     category: "non-veg",
     tagline: "Tender Boneless Mutton Chunks Slow-Fried in Authentic Spices & Rich Gravy",
     badge: "Signature Non-Veg",
-    spiceLevel: "🔥🔥🔥 Fiery & Rich",
+    spiceLevel: "ðŸ”¥ðŸ”¥ðŸ”¥ Fiery & Rich",
     shelfLife: "6 Months",
-    image: "images/mutton_pickle.jpg",
+    image: "mutton_pickle.jpg",
     fallbackImage: "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80",
     prices: {
       "250g": 350,
@@ -94,13 +94,13 @@ const PRODUCTS = [
   {
     id: "chicken-pickle",
     name: "Andhra Chicken Pickle (Boneless)",
-    teluguName: "చికెన్ పచ్చడి (బోన్‌లెస్)",
+    teluguName: "à°šà°¿à°•à±†à°¨à± à°ªà°šà±à°šà°¡à°¿ (à°¬à±‹à°¨à±â€Œà°²à±†à°¸à±)",
     category: "non-veg",
     tagline: "Succulent Roasted Boneless Chicken Chunks in Garlicky Aromatic Masala",
-    badge: "Top Rated ★ 4.9",
-    spiceLevel: "🔥🔥🔥 Spicy & Savory",
+    badge: "Top Rated â˜… 4.9",
+    spiceLevel: "ðŸ”¥ðŸ”¥ðŸ”¥ Spicy & Savory",
     shelfLife: "6 Months",
-    image: "images/chicken_pickle.jpg",
+    image: "chicken_pickle.jpg",
     fallbackImage: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&auto=format&fit=crop&q=80",
     prices: {
       "250g": 220,
@@ -113,13 +113,13 @@ const PRODUCTS = [
   {
     id: "fish-pickle",
     name: "Coastal Fish Pickle (Boneless)",
-    teluguName: "చేప పచ్చడి (బోన్‌లెస్ ఫిల్లెట్)",
+    teluguName: "à°šà±‡à°ª à°ªà°šà±à°šà°¡à°¿ (à°¬à±‹à°¨à±â€Œà°²à±†à°¸à± à°«à°¿à°²à±à°²à±†à°Ÿà±)",
     category: "non-veg",
     tagline: "Fresh Boneless Fish Cubes Pan-Seared in Tangy Tamarind & Coastal Spices",
     badge: "Coastal Special",
-    spiceLevel: "🔥🔥 Tangy & Spicy",
+    spiceLevel: "ðŸ”¥ðŸ”¥ Tangy & Spicy",
     shelfLife: "6 Months",
-    image: "images/fish_pickle.jpg",
+    image: "fish_pickle.jpg",
     fallbackImage: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600&auto=format&fit=crop&q=80",
     prices: {
       "250g": 260,
@@ -157,11 +157,11 @@ function initApp() {
       cartItemId: "mango-pickle-500g",
       id: "mango-pickle",
       name: "Avakaya Mango Pickle",
-      teluguName: "ఆవకాయ / మామిడికాయ పచ్చడి",
+      teluguName: "à°†à°µà°•à°¾à°¯ / à°®à°¾à°®à°¿à°¡à°¿à°•à°¾à°¯ à°ªà°šà±à°šà°¡à°¿",
       weight: "500g",
       unitPrice: 230,
       quantity: 1,
-      image: "images/mango_pickle.jpg",
+      image: "mango_pickle.jpg",
       fallbackImage: "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=600",
       category: "veg"
     }];
@@ -241,7 +241,7 @@ function selectProductWeight(productId, weight) {
   const price = product.prices[weight];
   const labelPrice = document.getElementById(`label-price-${productId}`);
   if (labelPrice) {
-    labelPrice.textContent = `Selected: ₹${price}`;
+    labelPrice.textContent = `Selected: â‚¹${price}`;
   }
 
   Object.keys(product.prices).forEach(w => {
@@ -290,7 +290,7 @@ function addToCart(productId, customWeight = null, showDrawer = true) {
   saveCartToStorage();
   updateCartUI();
   updateDirectOrderTotals();
-  showToast(`Added ${product.name} (${weight} - ₹${unitPrice}) to Order! 🌶️`);
+  showToast(`Added ${product.name} (${weight} - â‚¹${unitPrice}) to Order! ðŸŒ¶ï¸`);
 
   if (showDrawer) {
     openCartDrawer();
@@ -408,7 +408,7 @@ function updateCartUI() {
         <div class="flex-1 min-w-0">
           <h4 class="font-bold text-xs text-amber-950 truncate">${item.name}</h4>
           <span class="inline-block text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md mt-0.5 border border-amber-200">
-            ${item.weight} • ₹${item.unitPrice}
+            ${item.weight} â€¢ â‚¹${item.unitPrice}
           </span>
           <div class="flex items-center justify-between mt-2">
             <div class="flex items-center border border-amber-300 rounded-lg bg-white overflow-hidden shadow-xs">
@@ -422,7 +422,7 @@ function updateCartUI() {
                 class="px-2.5 py-0.5 hover:bg-amber-100 text-amber-950 font-bold text-xs"
               >+</button>
             </div>
-            <span class="font-extrabold text-xs text-red-900">₹${item.unitPrice * item.quantity}</span>
+            <span class="font-extrabold text-xs text-red-900">â‚¹${item.unitPrice * item.quantity}</span>
           </div>
         </div>
         <button 
@@ -440,30 +440,30 @@ function updateCartUI() {
     const diff = STORE_CONFIG.freeDeliveryThreshold - totals.subtotal;
     if (totals.subtotal === 0) {
       freeShipBar.style.width = "0%";
-      freeShipText.textContent = `Add items worth ₹${STORE_CONFIG.freeDeliveryThreshold} for FREE Delivery! 🚚`;
+      freeShipText.textContent = `Add items worth â‚¹${STORE_CONFIG.freeDeliveryThreshold} for FREE Delivery! ðŸšš`;
     } else if (diff <= 0) {
       freeShipBar.style.width = "100%";
-      freeShipText.innerHTML = `<span class="text-emerald-700 font-bold">🎉 Congratulations! You unlocked FREE Delivery!</span>`;
+      freeShipText.innerHTML = `<span class="text-emerald-700 font-bold">ðŸŽ‰ Congratulations! You unlocked FREE Delivery!</span>`;
     } else {
       const percentage = Math.min(100, Math.round((totals.subtotal / STORE_CONFIG.freeDeliveryThreshold) * 100));
       freeShipBar.style.width = `${percentage}%`;
-      freeShipText.textContent = `Add ₹${diff} more for FREE Home Delivery! 🚚`;
+      freeShipText.textContent = `Add â‚¹${diff} more for FREE Home Delivery! ðŸšš`;
     }
   }
 
-  if (drawerSubtotal) drawerSubtotal.textContent = `₹${totals.subtotal}`;
-  if (drawerDelivery) drawerDelivery.textContent = totals.deliveryFee === 0 ? "FREE" : `₹${totals.deliveryFee}`;
+  if (drawerSubtotal) drawerSubtotal.textContent = `â‚¹${totals.subtotal}`;
+  if (drawerDelivery) drawerDelivery.textContent = totals.deliveryFee === 0 ? "FREE" : `â‚¹${totals.deliveryFee}`;
   
   if (drawerDiscountRow && drawerDiscountVal) {
     if (totals.discountAmount > 0) {
       drawerDiscountRow.classList.remove("hidden");
-      drawerDiscountVal.textContent = `-₹${totals.discountAmount}`;
+      drawerDiscountVal.textContent = `-â‚¹${totals.discountAmount}`;
     } else {
       drawerDiscountRow.classList.add("hidden");
     }
   }
 
-  if (drawerTotal) drawerTotal.textContent = `₹${totals.grandTotal}`;
+  if (drawerTotal) drawerTotal.textContent = `â‚¹${totals.grandTotal}`;
 
   if (window.lucide) {
     window.lucide.createIcons();
@@ -505,7 +505,7 @@ function updateDirectOrderTotals() {
   const totals = calculateTotals();
 
   if (totalDisplay) {
-    totalDisplay.textContent = `₹${totals.grandTotal}`;
+    totalDisplay.textContent = `â‚¹${totals.grandTotal}`;
   }
 
   if (itemsDisplay) {
@@ -516,10 +516,10 @@ function updateDirectOrderTotals() {
         <div class="flex justify-between items-center bg-white/15 p-2.5 rounded-xl border border-white/20 text-white">
           <div>
             <span class="font-bold text-xs">${item.name}</span>
-            <span class="text-[11px] text-amber-300 block font-semibold">Pack: ${item.weight} • Qty: ${item.quantity}</span>
+            <span class="text-[11px] text-amber-300 block font-semibold">Pack: ${item.weight} â€¢ Qty: ${item.quantity}</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="font-black text-amber-300 text-sm">₹${item.unitPrice * item.quantity}</span>
+            <span class="font-black text-amber-300 text-sm">â‚¹${item.unitPrice * item.quantity}</span>
             <button type="button" onclick="removeCartItem('${item.cartItemId}')" class="text-neutral-300 hover:text-red-400 p-1" title="Remove"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
           </div>
         </div>
@@ -538,7 +538,7 @@ function updateDirectOrderTotals() {
   }
 
   if (upiAmount) {
-    upiAmount.textContent = `₹${totals.grandTotal}`;
+    upiAmount.textContent = `â‚¹${totals.grandTotal}`;
   }
 
   if (upiBtn) upiBtn.href = genericUpiUrl;
@@ -577,11 +577,11 @@ function setupEventListeners() {
       if (code === "AMMA10") {
         state.discountPercent = 10;
         state.discountCode = "AMMA10";
-        showToast("Coupon Applied: 10% Amma's Blessing Discount! 🎁");
+        showToast("Coupon Applied: 10% Amma's Blessing Discount! ðŸŽ");
       } else if (code === "FREESHIP") {
         state.discountPercent = 0;
         STORE_CONFIG.freeDeliveryThreshold = 0;
-        showToast("Coupon Applied: Free Shipping Unlocked! 🚚");
+        showToast("Coupon Applied: Free Shipping Unlocked! ðŸšš");
       } else if (code === "") {
         showToast("Please enter a valid coupon code", "error");
       } else {
@@ -768,28 +768,28 @@ function openCheckoutModal() {
         ${state.cart.map(item => `
           <div class="flex justify-between items-center text-xs">
             <span class="text-amber-950 font-medium">${item.name} (${item.weight}) x ${item.quantity}</span>
-            <span class="font-bold text-amber-900">₹${item.unitPrice * item.quantity}</span>
+            <span class="font-bold text-amber-900">â‚¹${item.unitPrice * item.quantity}</span>
           </div>
         `).join('')}
       </div>
       <div class="border-t border-amber-200 pt-2 space-y-1 text-xs">
         <div class="flex justify-between text-neutral-600">
           <span>Subtotal</span>
-          <span>₹${totals.subtotal}</span>
+          <span>â‚¹${totals.subtotal}</span>
         </div>
         ${totals.discountAmount > 0 ? `
           <div class="flex justify-between text-emerald-700 font-semibold">
             <span>Amma Discount</span>
-            <span>-₹${totals.discountAmount}</span>
+            <span>-â‚¹${totals.discountAmount}</span>
           </div>
         ` : ''}
         <div class="flex justify-between text-neutral-600">
           <span>Delivery (Parvathapur & India)</span>
-          <span class="font-semibold">${totals.deliveryFee === 0 ? '<span class="text-emerald-700">FREE</span>' : '₹' + totals.deliveryFee}</span>
+          <span class="font-semibold">${totals.deliveryFee === 0 ? '<span class="text-emerald-700">FREE</span>' : 'â‚¹' + totals.deliveryFee}</span>
         </div>
         <div class="flex justify-between text-sm font-extrabold text-red-900 border-t border-amber-200 pt-1.5">
           <span>Total Payable</span>
-          <span>₹${totals.grandTotal}</span>
+          <span>â‚¹${totals.grandTotal}</span>
         </div>
       </div>
     `;
@@ -837,7 +837,7 @@ function completeOrderPlacement(orderData) {
   // Render on-screen confirmation modal
   renderOrderSuccessModal(orderData, whatsappUrl);
 
-  showToast(`🎉 Order ${orderData.orderId} Placed! Sending WhatsApp Notification...`, "success");
+  showToast(`ðŸŽ‰ Order ${orderData.orderId} Placed! Sending WhatsApp Notification...`, "success");
 }
 
 // Save order to localStorage for Admin Dashboard
@@ -855,37 +855,37 @@ function saveOrderToHistory(orderData) {
 // Format WhatsApp Message
 function generateWhatsAppOrderMessage(orderData) {
   const itemsText = orderData.items.map((i, idx) => 
-    `  ${idx + 1}. *${i.name}* (${i.weight}) x ${i.quantity} = ₹${i.unitPrice * i.quantity}`
+    `  ${idx + 1}. *${i.name}* (${i.weight}) x ${i.quantity} = â‚¹${i.unitPrice * i.quantity}`
   ).join("\n");
 
-  const utrInfo = orderData.customer.utr && orderData.customer.utr !== "N/A" ? `\n• *UPI UTR / Ref:* ${orderData.customer.utr}` : "";
+  const utrInfo = orderData.customer.utr && orderData.customer.utr !== "N/A" ? `\nâ€¢ *UPI UTR / Ref:* ${orderData.customer.utr}` : "";
 
-  return `🌶️ *NEW ORDER - AMMA RUCHULU (అమ్మ రుచులు)* 🌶️
-━━━━━━━━━━━━━━━━━━
-🆔 *Order ID:* ${orderData.orderId}
-📅 *Date & Time:* ${orderData.timestamp}
-━━━━━━━━━━━━━━━━━━
-👤 *CUSTOMER DETAILS:*
-• *Name:* ${orderData.customer.fullName}
-• *Mobile / WhatsApp:* ${orderData.customer.phone}
-• *Delivery Address:* ${orderData.customer.streetAddress}
-• *Landmark / City:* ${orderData.customer.landmark} - ${orderData.customer.pincode}
+  return `ðŸŒ¶ï¸ *NEW ORDER - AMMA RUCHULU (à°…à°®à±à°® à°°à±à°šà±à°²à±)* ðŸŒ¶ï¸
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸ†” *Order ID:* ${orderData.orderId}
+ðŸ“… *Date & Time:* ${orderData.timestamp}
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸ‘¤ *CUSTOMER DETAILS:*
+â€¢ *Name:* ${orderData.customer.fullName}
+â€¢ *Mobile / WhatsApp:* ${orderData.customer.phone}
+â€¢ *Delivery Address:* ${orderData.customer.streetAddress}
+â€¢ *Landmark / City:* ${orderData.customer.landmark} - ${orderData.customer.pincode}
 
-📦 *ORDERED PICKLES:*
+ðŸ“¦ *ORDERED PICKLES:*
 ${itemsText}
 
-💰 *PAYMENT DETAILS:*
-• *Subtotal:* ₹${orderData.totals.subtotal}
-• *Discount (Coupon):* -₹${orderData.totals.discountAmount}
-• *Home Delivery:* ${orderData.totals.deliveryFee === 0 ? "FREE" : "₹" + orderData.totals.deliveryFee}
-• *TOTAL PAYABLE:* *₹${orderData.totals.grandTotal}*
-• *Payment Mode:* *${orderData.paymentMode.toUpperCase()}*
-• *Payment Status:* ${orderData.status}${utrInfo}
+ðŸ’° *PAYMENT DETAILS:*
+â€¢ *Subtotal:* â‚¹${orderData.totals.subtotal}
+â€¢ *Discount (Coupon):* -â‚¹${orderData.totals.discountAmount}
+â€¢ *Home Delivery:* ${orderData.totals.deliveryFee === 0 ? "FREE" : "â‚¹" + orderData.totals.deliveryFee}
+â€¢ *TOTAL PAYABLE:* *â‚¹${orderData.totals.grandTotal}*
+â€¢ *Payment Mode:* *${orderData.paymentMode.toUpperCase()}*
+â€¢ *Payment Status:* ${orderData.status}${utrInfo}
 
-📍 *Store Kitchen:* Sai Aishwarya Colony, Road No 1, Parvathapur, Hyderabad
-📞 *Store Helpline:* +91 8341643180
-━━━━━━━━━━━━━━━━━━
-_Please confirm my order and share dispatch tracking!_ ❤️🍛`;
+ðŸ“ *Store Kitchen:* Sai Aishwarya Colony, Road No 1, Parvathapur, Hyderabad
+ðŸ“ž *Store Helpline:* +91 8341643180
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+_Please confirm my order and share dispatch tracking!_ â¤ï¸ðŸ›`;
 }
 
 // Success Modal with 1-Click WhatsApp Button
@@ -905,7 +905,7 @@ function renderOrderSuccessModal(orderData, whatsappUrl) {
         </span>
         <h3 class="text-2xl font-bold font-cinzel text-amber-950">Dhanyavadalu! Order Placed!</h3>
         <p class="text-xs text-neutral-600 mt-1 max-w-md mx-auto">
-          "ప్రతి ముద్దలో అమ్మ ప్రేమ" — Thank you <span class="font-bold text-amber-950">${orderData.customer.fullName}</span>! We are preparing your fresh homemade pickles.
+          "à°ªà±à°°à°¤à°¿ à°®à±à°¦à±à°¦à°²à±‹ à°…à°®à±à°® à°ªà±à°°à±‡à°®" â€” Thank you <span class="font-bold text-amber-950">${orderData.customer.fullName}</span>! We are preparing your fresh homemade pickles.
         </p>
       </div>
 
@@ -943,7 +943,7 @@ function renderOrderSuccessModal(orderData, whatsappUrl) {
       <div class="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 text-xs space-y-3" id="printable-receipt">
         <div class="flex justify-between items-center border-b border-amber-200 pb-2">
           <div>
-            <h4 class="font-bold font-cinzel text-sm text-red-900">Amma Ruchulu (అమ్మ రుచులు)</h4>
+            <h4 class="font-bold font-cinzel text-sm text-red-900">Amma Ruchulu (à°…à°®à±à°® à°°à±à°šà±à°²à±)</h4>
             <p class="text-[11px] text-neutral-600">Sai Aishwarya Colony, Road No 1, Near Mediplus, Parvathapur</p>
             <p class="text-[11px] text-neutral-600">Helpline: +91 8341643180</p>
           </div>
@@ -965,7 +965,7 @@ function renderOrderSuccessModal(orderData, whatsappUrl) {
             ${orderData.items.map(item => `
               <div class="flex justify-between text-neutral-700">
                 <span>${item.name} <strong>(${item.weight})</strong> x ${item.quantity}</span>
-                <span class="font-semibold">₹${item.unitPrice * item.quantity}</span>
+                <span class="font-semibold">â‚¹${item.unitPrice * item.quantity}</span>
               </div>
             `).join('')}
           </div>
@@ -974,21 +974,21 @@ function renderOrderSuccessModal(orderData, whatsappUrl) {
         <div class="border-t border-amber-300 pt-2 space-y-1">
           <div class="flex justify-between text-neutral-600">
             <span>Subtotal</span>
-            <span>₹${orderData.totals.subtotal}</span>
+            <span>â‚¹${orderData.totals.subtotal}</span>
           </div>
           ${orderData.totals.discountAmount > 0 ? `
             <div class="flex justify-between text-emerald-700 font-semibold">
               <span>Amma Coupon Discount</span>
-              <span>-₹${orderData.totals.discountAmount}</span>
+              <span>-â‚¹${orderData.totals.discountAmount}</span>
             </div>
           ` : ''}
           <div class="flex justify-between text-neutral-600">
             <span>Delivery Charges</span>
-            <span>${orderData.totals.deliveryFee === 0 ? '<span class="text-emerald-700 font-bold">FREE</span>' : "₹" + orderData.totals.deliveryFee}</span>
+            <span>${orderData.totals.deliveryFee === 0 ? '<span class="text-emerald-700 font-bold">FREE</span>' : "â‚¹" + orderData.totals.deliveryFee}</span>
           </div>
           <div class="flex justify-between text-sm font-extrabold text-red-900 border-t border-amber-300 pt-1.5">
             <span>Total Payable</span>
-            <span>₹${orderData.totals.grandTotal}</span>
+            <span>â‚¹${orderData.totals.grandTotal}</span>
           </div>
         </div>
       </div>
@@ -1051,7 +1051,7 @@ function openProductDetails(productId) {
       <div class="md:w-1/2 flex flex-col justify-between">
         <div>
           <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${isVeg ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'} mb-2">
-            ${isVeg ? '🌿 100% Pure Vegetarian' : '🍗 Authentic Non-Veg Delicacy'}
+            ${isVeg ? 'ðŸŒ¿ 100% Pure Vegetarian' : 'ðŸ— Authentic Non-Veg Delicacy'}
           </span>
           <h3 class="text-xl font-bold font-cinzel text-amber-950">${product.name}</h3>
           <p class="text-xs font-indic text-amber-800 font-bold">${product.teluguName}</p>
@@ -1067,15 +1067,15 @@ function openProductDetails(productId) {
             <div class="grid grid-cols-3 gap-2 text-center">
               <div class="p-1.5 bg-white rounded-lg border border-amber-200">
                 <div class="font-bold text-neutral-600 text-[11px]">250g</div>
-                <div class="font-black text-red-900">₹${product.prices['250g']}</div>
+                <div class="font-black text-red-900">â‚¹${product.prices['250g']}</div>
               </div>
               <div class="p-1.5 bg-white rounded-lg border border-amber-200">
                 <div class="font-bold text-neutral-600 text-[11px]">500g</div>
-                <div class="font-black text-red-900">₹${product.prices['500g']}</div>
+                <div class="font-black text-red-900">â‚¹${product.prices['500g']}</div>
               </div>
               <div class="p-1.5 bg-white rounded-lg border border-amber-200">
                 <div class="font-bold text-neutral-600 text-[11px]">1kg</div>
-                <div class="font-black text-red-900">₹${product.prices['1kg']}</div>
+                <div class="font-black text-red-900">â‚¹${product.prices['1kg']}</div>
               </div>
             </div>
           </div>
@@ -1148,3 +1148,4 @@ function showToast(message, type = "success") {
     setTimeout(() => toast.remove(), 350);
   }, 3500);
 }
+
