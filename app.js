@@ -606,6 +606,18 @@ function setupEventListeners() {
     });
   });
 
+  // Modal Form Payment Mode Listeners
+  const modalPaymentRadios = document.querySelectorAll("input[name='paymentMode']");
+  modalPaymentRadios.forEach(radio => {
+    radio.addEventListener("change", (e) => {
+      const modalUpi = document.getElementById("modal-upi-info");
+      const modalCard = document.getElementById("modal-card-info");
+
+      if (modalUpi) modalUpi.classList.toggle("hidden", e.target.value !== "upi");
+      if (modalCard) modalCard.classList.toggle("hidden", !(e.target.value === "credit" || e.target.value === "debit"));
+    });
+  });
+
   // Direct Order Form Submit
   const directForm = document.getElementById("direct-order-form");
   if (directForm) {

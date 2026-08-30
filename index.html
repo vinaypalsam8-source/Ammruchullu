@@ -923,7 +923,7 @@
                       Scan & Pay Direct
                     </span>
                     <h5 class="font-bold text-xs text-white">Official Store UPI ID:</h5>
-                    <p class="font-mono font-bold text-amber-300 text-sm bg-black/40 px-2.5 py-1 rounded-lg inline-block">8341643180@upi</p>
+                    <p class="font-mono font-bold text-amber-300 text-sm bg-black/40 px-2.5 py-1 rounded-lg inline-block select-all" id="display-upi-id">vinaypalsam@okaxis</p>
                     <p class="text-[11px] text-neutral-300">Amount: <strong id="direct-upi-amount" class="text-amber-300 text-sm">₹0</strong></p>
                   </div>
                 </div>
@@ -1555,8 +1555,23 @@
                 <span class="font-bold text-xs text-amber-950">Debit Card</span>
                 <input type="radio" name="paymentMode" value="debit" class="text-amma-red focus:ring-amma-red" />
               </div>
-              <p class="text-[10px] text-neutral-500">Pay with Debit Card</p>
-            </label>
+          </div>
+
+          <!-- Modal Payment Info Boxes -->
+          <div id="modal-upi-info" class="mt-3 p-3.5 bg-amber-50 rounded-2xl border border-amber-300 hidden space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-amber-950">Store UPI ID:</span>
+              <span class="font-mono font-bold text-red-900 bg-white px-2.5 py-1 rounded-lg border border-amber-300 select-all">vinaypalsam@okaxis</span>
+            </div>
+            <p class="text-[11px] text-neutral-600">Scan QR or send payment to <strong class="text-amber-950">vinaypalsam@okaxis</strong> via GPay, PhonePe, or Paytm.</p>
+          </div>
+
+          <div id="modal-card-info" class="mt-3 p-3.5 bg-purple-50 rounded-2xl border border-purple-200 hidden text-xs text-purple-950 space-y-1">
+            <p class="font-bold flex items-center gap-1.5 text-purple-900">
+              <i data-lucide="credit-card" class="w-4 h-4 text-purple-600"></i>
+              Card Payment on Delivery
+            </p>
+            <p class="text-[11px] text-neutral-600">Our delivery partner will carry a portable swipe machine for Credit/Debit card payment.</p>
           </div>
         </div>
 
