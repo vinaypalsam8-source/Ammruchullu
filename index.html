@@ -923,8 +923,14 @@
                       Scan & Pay Direct
                     </span>
                     <h5 class="font-bold text-xs text-white">Official Store UPI ID:</h5>
-                    <p class="font-mono font-bold text-amber-300 text-sm bg-black/40 px-2.5 py-1 rounded-lg inline-block select-all" id="display-upi-id">vinaypalsam@okaxis</p>
-                    <p class="text-[11px] text-neutral-300">Amount: <strong id="direct-upi-amount" class="text-amber-300 text-sm">₹0</strong></p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <p class="font-mono font-bold text-amber-300 text-sm bg-black/50 px-2.5 py-1 rounded-lg select-all border border-amber-400/40" id="display-upi-id">vinaypalsam8@okaxis</p>
+                      <button type="button" onclick="copyUpiId()" class="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-neutral-950 rounded-lg text-xs font-black transition shadow flex items-center gap-1">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>Copy</span>
+                      </button>
+                    </div>
+                    <p class="text-[11px] text-neutral-300 mt-1">Amount: <strong id="direct-upi-amount" class="text-amber-300 text-sm">₹0</strong></p>
                   </div>
                 </div>
 
@@ -1568,8 +1574,14 @@
               <div class="space-y-1 text-center sm:text-left flex-1">
                 <span class="inline-block text-[10px] font-bold bg-amber-400 text-neutral-950 px-2 py-0.5 rounded-full">Scan & Pay</span>
                 <p class="text-[11px] text-neutral-600">Store Official UPI ID:</p>
-                <p class="font-mono font-bold text-red-900 bg-white px-2.5 py-1 rounded-lg border border-amber-300 select-all inline-block">vinaypalsam@okaxis</p>
-                <p class="text-[11px] text-neutral-600">Total: <strong id="modal-upi-amount" class="text-red-900 font-bold">₹0</strong></p>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <p class="font-mono font-bold text-red-900 bg-white px-2 py-1 rounded-lg border border-amber-300 select-all inline-block text-xs">vinaypalsam8@okaxis</p>
+                  <button type="button" onclick="copyUpiId()" class="px-2 py-1 bg-amber-400 hover:bg-amber-300 text-neutral-950 rounded-lg text-[10px] font-bold transition flex items-center gap-1">
+                    <i data-lucide="copy" class="w-3 h-3"></i>
+                    <span>Copy</span>
+                  </button>
+                </div>
+                <p class="text-[11px] text-neutral-600 mt-1">Total: <strong id="modal-upi-amount" class="text-red-900 font-bold">₹0</strong></p>
               </div>
             </div>
             <div class="pt-2 border-t border-amber-200 flex flex-wrap gap-2">

@@ -7,7 +7,7 @@ const STORE_CONFIG = {
   name: "Amma Ruchulu (అమ్మ రుచులు)",
   phone: "8341643180",
   whatsappNumber: "918341643180",
-  upiId: "vinaypalsam@okaxis",
+  upiId: "vinaypalsam8@okaxis",
   address: "Sai Aishwarya Colony, Road No 1, Near Mediplus, Parvathapur, Hyderabad - 500098",
   freeDeliveryThreshold: 500,
   defaultDeliveryFee: 40
@@ -527,22 +527,21 @@ function updateDirectOrderTotals() {
     }
   }
 
-  // Standard NPCI Compliant UPI Deep Link (No double encoding for VPA)
+  // Standard Universal NPCI UPI URI
   const upiIdClean = STORE_CONFIG.upiId.trim();
-  const upiAmountVal = Number(totals.grandTotal).toFixed(2);
   const upiPayeeName = encodeURIComponent("Amma Ruchulu");
-  const upiNote = encodeURIComponent("Amma Ruchulu Pickles");
+  const upiAmountVal = totals.grandTotal;
 
-  // Format: upi://pay?pa=vinaypalsam@okaxis&pn=Amma%20Ruchulu&am=230.00&cu=INR&tn=Amma%20Ruchulu%20Pickles
-  const standardUpiUrl = `upi://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
-  const gpayUrl = `gpay://upi/pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
-  const phonepeUrl = `phonepe://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
-  const paytmUrl = `paytmmp://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
+  // Universal format accepted by GPay, PhonePe, Paytm, BHIM, Cred, Banking Apps
+  const standardUpiUrl = `upi://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR`;
+  const gpayUrl = `gpay://upi/pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR`;
+  const phonepeUrl = `phonepe://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR`;
+  const paytmUrl = `paytmmp://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR`;
 
   if (qrDisplay) {
-    // Generate crisp, high-contrast QR code
+    // Generate crisp QR code
     qrDisplay.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(standardUpiUrl)}&margin=12&format=png`;
-    qrDisplay.alt = `UPI QR Code for ${STORE_CONFIG.upiId} - Amount ₹${totals.grandTotal}`;
+    qrDisplay.alt = `UPI QR Code for ${STORE_CONFIG.upiId}`;
   }
 
   if (upiAmount) {
@@ -823,16 +822,15 @@ function openCheckoutModal() {
   const modalPaytm = document.getElementById("modal-paytm-btn");
 
   const upiIdClean = STORE_CONFIG.upiId.trim();
-  const upiAmountVal = Number(totals.grandTotal).toFixed(2);
   const upiPayeeName = encodeURIComponent("Amma Ruchulu");
-  const upiNote = encodeURIComponent("Amma Ruchulu Pickles");
-  const standardUpiUrl = `upi://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
-  const gpayUrl = `gpay://upi/pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
-  const phonepeUrl = `phonepe://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
-  const paytmUrl = `paytmmp://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR&tn=${upiNote}`;
+  const upiAmountVal = totals.grandTotal;
+  const standardUpiUrl = `upi://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR`;
+  const gpayUrl = `gpay://upi/pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR`;
+  const phonepeUrl = `phonepe://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR`;
+  const paytmUrl = `paytmmp://pay?pa=${upiIdClean}&pn=${upiPayeeName}&am=${upiAmountVal}&cu=INR`;
 
   if (modalQr) {
-    modalQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(standardUpiUrl)}&margin=10&format=png`;
+    modalQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(standardUpiUrl)}&margin=10&format=png`;
   }
   if (modalUpiAmount) modalUpiAmount.textContent = `₹${totals.grandTotal}`;
   if (modalGpay) modalGpay.href = gpayUrl;
@@ -841,6 +839,16 @@ function openCheckoutModal() {
 
   modal.classList.remove("hidden");
   modal.classList.add("flex");
+}
+
+// 1-Click Copy UPI ID to Clipboard
+function copyUpiId() {
+  const upi = STORE_CONFIG.upiId;
+  navigator.clipboard.writeText(upi).then(() => {
+    showToast(`📋 Copied UPI ID: ${upi}`, "success");
+  }).catch(() => {
+    showToast(`UPI ID: ${upi}`);
+  });
 }
 
 function closeCheckoutModal() {
