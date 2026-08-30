@@ -7,7 +7,7 @@ const STORE_CONFIG = {
   name: "Amma Ruchulu (అమ్మ రుచులు)",
   phone: "8341643180",
   whatsappNumber: "918341643180",
-  upiId: "vinaypalsam8@okaxis",
+  upiId: "8341643180@kotakbank",
   address: "Sai Aishwarya Colony, Road No 1, Near Mediplus, Parvathapur, Hyderabad - 500098",
   freeDeliveryThreshold: 500,
   defaultDeliveryFee: 40
