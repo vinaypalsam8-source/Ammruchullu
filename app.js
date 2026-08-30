@@ -840,15 +840,68 @@ function completeOrderPlacement(orderData) {
   showToast(`🎉 Order ${orderData.orderId} Placed! Sending WhatsApp Notification...`, "success");
 }
 
-// Save order to localStorage for Admin Dashboard
-function saveOrderToHistory(orderData) {
+// Supabase Cloud Configuration (Replace with your project keys or configure via Dashboard)
+const SUPABASE_CONFIG = {
+  url: localStorage.getItem("amma_supabase_url") || "",
+  anonKey: localStorage.getItem("amma_supabase_key") || ""
+};
+
+function getSupabaseClient() {
+  if (window.supabase && SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey) {
+    try {
+      return window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    } catch (err) {
+      console.error("Supabase client init error:", err);
+    }
+  }
+  return null;
+}
+
+// Save order to history and Supabase Cloud
+async function saveOrderToHistory(orderData) {
+  // 1. Always save locally
   try {
     const existingStr = localStorage.getItem("amma_ruchulu_all_orders");
     const existing = existingStr ? JSON.parse(existingStr) : [];
     existing.unshift(orderData);
     localStorage.setItem("amma_ruchulu_all_orders", JSON.stringify(existing));
   } catch (e) {
-    console.error("Error saving order to history", e);
+    console.error("Error saving order to local storage", e);
+  }
+
+  // 2. Direct Sync to Supabase PostgreSQL Database (if connected)
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from("orders").insert([
+        {
+          order_id: orderData.orderId,
+          customer_name: orderData.customer.fullName,
+          phone: orderData.customer.phone,
+          email: orderData.customer.email || "",
+          street_address: orderData.customer.streetAddress,
+          landmark: orderData.customer.landmark || "",
+          pincode: orderData.customer.pincode || "",
+          items: orderData.items,
+          subtotal: orderData.totals.subtotal,
+          discount_amount: orderData.totals.discountAmount || 0,
+          delivery_fee: orderData.totals.deliveryFee || 0,
+          grand_total: orderData.totals.grandTotal,
+          payment_mode: orderData.paymentMode,
+          payment_status: orderData.status,
+          order_status: "pending",
+          utr: orderData.customer.utr || "N/A"
+        }
+      ]);
+
+      if (error) {
+        console.warn("Supabase insert warning:", error.message);
+      } else {
+        console.log("✅ Order synced directly to Supabase Cloud Database!");
+      }
+    } catch (err) {
+      console.error("Error syncing to Supabase:", err);
+    }
   }
 }
 

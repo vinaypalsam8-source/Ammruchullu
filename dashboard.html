@@ -17,6 +17,9 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -86,6 +89,16 @@
 
       <!-- Quick Actions -->
       <div class="flex items-center gap-2 sm:gap-3">
+        <button 
+          onclick="openSupabaseModal()" 
+          id="supabase-status-btn"
+          class="px-3 py-2 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition border border-emerald-500/40 shadow-sm"
+          title="Supabase Cloud Database Connection Settings"
+        >
+          <i data-lucide="database" class="w-4 h-4 text-emerald-400"></i>
+          <span id="supabase-status-text">⚡ Supabase: Local / Setup</span>
+        </button>
+
         <button 
           onclick="seedSampleOrders()" 
           class="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold flex items-center gap-1.5 transition border border-neutral-700"
@@ -333,6 +346,72 @@
           <span>Print Slip</span>
         </button>
         <button onclick="closeKitchenSlipModal()" class="px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold rounded-xl text-xs transition">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= SUPABASE CLOUD CONNECTION MODAL ================= -->
+  <div id="supabase-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-neutral-900 text-neutral-100 border border-neutral-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      
+      <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black">
+            <i data-lucide="database" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">Supabase Cloud Database Settings</h3>
+            <p class="text-[11px] text-neutral-400">Connect your free PostgreSQL database on Supabase</p>
+          </div>
+        </div>
+        <button onclick="closeSupabaseModal()" class="p-1.5 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-neutral-300 mb-1">Supabase Project URL:</label>
+          <input 
+            type="url" 
+            id="supabase-url-input"
+            placeholder="https://yourproject.supabase.co" 
+            class="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-700 rounded-xl text-white font-mono text-xs focus:border-emerald-500 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label class="block font-bold text-neutral-300 mb-1">Supabase Anon / Public Key:</label>
+          <input 
+            type="password" 
+            id="supabase-key-input"
+            placeholder="eyJhbGciOi..." 
+            class="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-700 rounded-xl text-white font-mono text-xs focus:border-emerald-500 focus:outline-none"
+          />
+        </div>
+
+        <div class="p-3 bg-neutral-950 rounded-2xl border border-neutral-800 text-[11px] space-y-1.5 text-neutral-400">
+          <p class="font-bold text-emerald-400 flex items-center gap-1">
+            <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Where to get these keys?
+          </p>
+          <p>1. Go to <a href="https://supabase.com/dashboard" target="_blank" class="text-amber-400 underline font-semibold">supabase.com/dashboard</a> ➔ Your Project.</p>
+          <p>2. Click <strong>Project Settings (gear icon) ➔ API</strong>.</p>
+          <p>3. Copy the <strong>Project URL</strong> and <strong>anon public API key</strong> and paste above.</p>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-neutral-800 flex gap-2">
+        <button onclick="saveSupabaseSettings()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-lg">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          <span>Save & Connect Database</span>
+        </button>
+        <button onclick="disconnectSupabase()" class="px-3.5 py-2.5 bg-neutral-800 hover:bg-rose-900/50 text-neutral-300 hover:text-rose-300 font-semibold rounded-xl text-xs transition">
+          Clear / Disconnect
+        </button>
+        <button onclick="closeSupabaseModal()" class="px-4 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold rounded-xl text-xs transition">
           Close
         </button>
       </div>

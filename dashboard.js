@@ -76,8 +76,69 @@ const INITIAL_SEED_ORDERS = [
   }
 ];
 
+// Supabase Cloud Configuration
+let supabaseClient = null;
+
+function getSupabaseConfig() {
+  return {
+    url: localStorage.getItem("amma_supabase_url") || "",
+    anonKey: localStorage.getItem("amma_supabase_key") || ""
+  };
+}
+
+function initSupabase() {
+  const config = getSupabaseConfig();
+  if (window.supabase && config.url && config.anonKey) {
+    try {
+      supabaseClient = window.supabase.createClient(config.url, config.anonKey);
+      updateSupabaseStatusBadge(true);
+      setupSupabaseRealtime();
+      return supabaseClient;
+    } catch (err) {
+      console.error("Supabase init error:", err);
+      updateSupabaseStatusBadge(false);
+    }
+  } else {
+    updateSupabaseStatusBadge(false);
+  }
+  return null;
+}
+
+function updateSupabaseStatusBadge(isConnected) {
+  const btn = document.getElementById("supabase-status-btn");
+  const text = document.getElementById("supabase-status-text");
+  if (!btn || !text) return;
+
+  if (isConnected) {
+    btn.className = "px-3 py-2 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition border border-emerald-500 shadow-md";
+    text.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span> ⚡ Supabase: Cloud Connected';
+  } else {
+    btn.className = "px-3 py-2 rounded-xl bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition border border-amber-500/40 shadow-sm";
+    text.innerHTML = '⚡ Connect Supabase';
+  }
+}
+
+// Real-time Cloud Subscriptions
+function setupSupabaseRealtime() {
+  if (!supabaseClient) return;
+
+  try {
+    supabaseClient
+      .channel("public:orders")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, payload => {
+        console.log("⚡ Real-time Supabase update received:", payload);
+        loadOrders();
+        showDashboardToast("⚡ Real-time Order Update received from Cloud!");
+      })
+      .subscribe();
+  } catch (err) {
+    console.error("Realtime subscription error:", err);
+  }
+}
+
 // Initialize Dashboard
 document.addEventListener("DOMContentLoaded", () => {
+  initSupabase();
   loadOrders();
   renderDashboard();
   if (window.lucide) {
@@ -85,8 +146,54 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Load Orders from LocalStorage (or Seed if empty)
-function loadOrders() {
+// Load Orders from Supabase Cloud (or LocalStorage fallback)
+async function loadOrders() {
+  const config = getSupabaseConfig();
+  
+  if (supabaseClient && config.url && config.anonKey) {
+    try {
+      const { data, error } = await supabaseClient
+        .from("orders")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (!error && Array.isArray(data)) {
+        dashboardState.orders = data.map(row => ({
+          orderId: row.order_id,
+          timestamp: row.timestamp ? new Date(row.timestamp).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "Recently",
+          orderStatus: row.order_status || "pending",
+          customer: {
+            fullName: row.customer_name,
+            phone: row.phone,
+            email: row.email,
+            streetAddress: row.street_address,
+            landmark: row.landmark,
+            pincode: row.pincode,
+            utr: row.utr || "N/A"
+          },
+          items: Array.isArray(row.items) ? row.items : [],
+          totals: {
+            subtotal: Number(row.subtotal) || 0,
+            discountAmount: Number(row.discount_amount) || 0,
+            deliveryFee: Number(row.delivery_fee) || 0,
+            grandTotal: Number(row.grand_total) || 0
+          },
+          paymentMode: row.payment_mode || "cod",
+          status: row.payment_status || "Order Received"
+        }));
+
+        saveOrdersToStorage();
+        renderDashboard();
+        return;
+      } else {
+        console.warn("Supabase fetch warning:", error?.message);
+      }
+    } catch (e) {
+      console.error("Error fetching from Supabase:", e);
+    }
+  }
+
+  // Fallback to LocalStorage
   try {
     const raw = localStorage.getItem("amma_ruchulu_all_orders");
     if (raw) {
@@ -96,6 +203,7 @@ function loadOrders() {
           ...order,
           orderStatus: order.orderStatus || (order.status && order.status.toLowerCase().includes("delivered") ? "completed" : "pending")
         }));
+        renderDashboard();
         return;
       }
     }
@@ -106,6 +214,7 @@ function loadOrders() {
   // Seed default sample orders for immediate demonstration
   dashboardState.orders = [...INITIAL_SEED_ORDERS];
   saveOrdersToStorage();
+  renderDashboard();
 }
 
 function saveOrdersToStorage() {
@@ -177,7 +286,7 @@ function handleSearch(query) {
 }
 
 // Update Order Status (Pending -> Processing -> Completed -> Cancelled)
-function updateOrderStatus(orderId, newStatus) {
+async function updateOrderStatus(orderId, newStatus) {
   const order = dashboardState.orders.find(o => o.orderId === orderId);
   if (order) {
     order.orderStatus = newStatus;
@@ -185,16 +294,52 @@ function updateOrderStatus(orderId, newStatus) {
     renderKPIs();
     renderOrdersTable();
     showDashboardToast(`Order #${orderId} marked as ${newStatus.toUpperCase()}`);
+
+    // Sync to Supabase Cloud
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient
+          .from("orders")
+          .update({ order_status: newStatus })
+          .eq("order_id", orderId);
+
+        if (error) {
+          console.warn("Supabase update error:", error.message);
+        } else {
+          console.log(`✅ Supabase order ${orderId} updated to ${newStatus}`);
+        }
+      } catch (err) {
+        console.error("Supabase status update error:", err);
+      }
+    }
   }
 }
 
 // Delete Order
-function deleteOrder(orderId) {
+async function deleteOrder(orderId) {
   if (confirm(`Are you sure you want to delete order #${orderId}?`)) {
     dashboardState.orders = dashboardState.orders.filter(o => o.orderId !== orderId);
     saveOrdersToStorage();
     renderDashboard();
     showDashboardToast(`Order #${orderId} deleted.`);
+
+    // Delete from Supabase Cloud
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient
+          .from("orders")
+          .delete()
+          .eq("order_id", orderId);
+
+        if (error) {
+          console.warn("Supabase delete error:", error.message);
+        } else {
+          console.log(`✅ Supabase order ${orderId} deleted`);
+        }
+      } catch (err) {
+        console.error("Supabase delete error:", err);
+      }
+    }
   }
 }
 
@@ -573,4 +718,60 @@ function showDashboardToast(msg) {
   toast.innerHTML = `<span>⚡ ${msg}</span>`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3500);
+}
+
+// Supabase Settings Modal Controls
+function openSupabaseModal() {
+  const modal = document.getElementById("supabase-modal");
+  const urlInput = document.getElementById("supabase-url-input");
+  const keyInput = document.getElementById("supabase-key-input");
+  
+  if (urlInput) urlInput.value = localStorage.getItem("amma_supabase_url") || "";
+  if (keyInput) keyInput.value = localStorage.getItem("amma_supabase_key") || "";
+  
+  if (modal) {
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+}
+
+function closeSupabaseModal() {
+  const modal = document.getElementById("supabase-modal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+}
+
+function saveSupabaseSettings() {
+  const urlInput = document.getElementById("supabase-url-input");
+  const keyInput = document.getElementById("supabase-key-input");
+  
+  const url = urlInput ? urlInput.value.trim() : "";
+  const key = keyInput ? keyInput.value.trim() : "";
+
+  if (!url || !key) {
+    alert("Please enter both your Supabase Project URL and Anon API Key.");
+    return;
+  }
+
+  localStorage.setItem("amma_supabase_url", url);
+  localStorage.setItem("amma_supabase_key", key);
+
+  closeSupabaseModal();
+  initSupabase();
+  loadOrders();
+  showDashboardToast("Supabase Cloud Connected! Syncing live database...");
+}
+
+function disconnectSupabase() {
+  if (confirm("Disconnect Supabase and switch back to Local Mode?")) {
+    localStorage.removeItem("amma_supabase_url");
+    localStorage.removeItem("amma_supabase_key");
+    supabaseClient = null;
+    closeSupabaseModal();
+    updateSupabaseStatusBadge(false);
+    loadOrders();
+    showDashboardToast("Switched to Local Mode.");
+  }
 }
