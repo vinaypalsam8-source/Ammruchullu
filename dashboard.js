@@ -495,6 +495,16 @@ function renderOrdersTable() {
         <td class="py-4 px-4 align-top text-center">
           <div class="flex items-center justify-center gap-1.5">
             
+            <!-- Local Bike Dispatch Button (Porter / Rapido) -->
+            <button 
+              onclick="openLocalDispatchModal('${order.orderId}')"
+              class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-400 text-amber-300 hover:text-neutral-950 transition shadow-sm font-bold text-xs flex items-center gap-1 border border-amber-500/30"
+              title="Dispatch via Rapido / Porter / Bike Delivery"
+            >
+              <i data-lucide="bike" class="w-3.5 h-3.5"></i>
+              <span class="hidden xl:inline">Dispatch</span>
+            </button>
+
             <!-- WhatsApp Customer Button -->
             <button 
               onclick="notifyCustomerWhatsApp('${order.orderId}')"
@@ -507,7 +517,7 @@ function renderOrdersTable() {
             <!-- Print Kitchen Slip -->
             <button 
               onclick="openKitchenSlipModal('${order.orderId}')"
-              class="p-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-neutral-950 transition shadow-sm"
+              class="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500 text-amber-300 hover:text-neutral-950 transition shadow-sm"
               title="Print Kitchen Preparation Slip"
             >
               <i data-lucide="printer" class="w-4 h-4"></i>
@@ -773,5 +783,180 @@ function disconnectSupabase() {
     updateSupabaseStatusBadge(false);
     loadOrders();
     showDashboardToast("Switched to Local Mode.");
+  }
+}
+
+// ================= LOCAL BIKE DISPATCH (PORTER / RAPIDO / DUNZO) =================
+let currentDispatchOrder = null;
+
+function openLocalDispatchModal(orderId) {
+  const order = dashboardState.orders.find(o => o.orderId === orderId);
+  if (!order) return;
+
+  currentDispatchOrder = order;
+
+  const modal = document.getElementById("local-dispatch-modal");
+  const infoContainer = document.getElementById("local-dispatch-order-info");
+  const gmapsLink = document.getElementById("dispatch-gmaps-link");
+
+  if (!modal || !infoContainer) return;
+
+  const itemsList = order.items.map(i => `${i.name} (${i.weight}) x ${i.quantity}`).join(", ");
+  const fullAddress = `${order.customer.streetAddress}, ${order.customer.landmark || 'Parvathapur'}, ${order.customer.pincode || '500098'}`;
+  
+  // Google Maps Direction URL: From Parvathapur kitchen to customer address
+  const encodedOrigin = encodeURIComponent("Sai Aishwarya Colony, Road No 1, Parvathapur, Hyderabad, 500098");
+  const encodedDest = encodeURIComponent(fullAddress);
+  if (gmapsLink) {
+    gmapsLink.href = `https://www.google.com/maps/dir/?api=1&origin=${encodedOrigin}&destination=${encodedDest}`;
+  }
+
+  infoContainer.innerHTML = `
+    <div class="flex items-center justify-between border-b border-neutral-800 pb-2">
+      <div>
+        <span class="font-mono font-bold text-amber-400 text-sm">${order.orderId}</span>
+        <span class="text-[11px] text-neutral-400 block">${order.timestamp}</span>
+      </div>
+      <div class="text-right">
+        <span class="text-sm font-black text-amber-300">₹${order.totals.grandTotal}</span>
+        <span class="text-[10px] text-neutral-400 block uppercase font-bold">${order.paymentMode}</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs">
+      <div>
+        <strong class="text-neutral-400 block text-[10px] uppercase">Customer Name & Phone:</strong>
+        <p class="text-white font-bold">${order.customer.fullName}</p>
+        <a href="tel:${order.customer.phone}" class="text-amber-400 font-mono text-xs hover:underline">📞 +91 ${order.customer.phone}</a>
+      </div>
+      <div>
+        <strong class="text-neutral-400 block text-[10px] uppercase">Drop Address:</strong>
+        <p class="text-neutral-200">${fullAddress}</p>
+      </div>
+    </div>
+
+    <div class="pt-2 border-t border-neutral-800">
+      <strong class="text-neutral-400 block text-[10px] uppercase">Parcel Contents:</strong>
+      <p class="text-amber-200/90 font-medium">${itemsList}</p>
+    </div>
+  `;
+
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function closeLocalDispatchModal() {
+  const modal = document.getElementById("local-dispatch-modal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+  currentDispatchOrder = null;
+}
+
+// 1-Click Copy Customer Address Formatted for Rapido / Porter
+function copyLocalDispatchDetails() {
+  if (!currentDispatchOrder) return;
+
+  const o = currentDispatchOrder;
+  const copyText = `RECEIVER: ${o.customer.fullName}
+PHONE: ${o.customer.phone}
+ADDRESS: ${o.customer.streetAddress}, ${o.customer.landmark || 'Parvathapur'}, PIN: ${o.customer.pincode || '500098'}
+PARCEL: Amma Ruchulu Homemade Pickles (${o.items.map(i => `${i.name} ${i.weight}`).join(', ')})`;
+
+  navigator.clipboard.writeText(copyText).then(() => {
+    showDashboardToast("📋 Customer Address Copied! Ready to paste in Rapido / Porter.");
+    const btn = document.getElementById("copy-dispatch-btn");
+    if (btn) {
+      btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>Copied! ✓</span>`;
+      if (window.lucide) window.lucide.createIcons();
+      setTimeout(() => {
+        btn.innerHTML = `<i data-lucide="copy" class="w-3.5 h-3.5"></i><span>Copy Full Address & Phone</span>`;
+        if (window.lucide) window.lucide.createIcons();
+      }, 3000);
+    }
+  }).catch(() => {
+    alert(copyText);
+  });
+}
+
+// Send Dispatch WhatsApp update to Customer
+function sendDispatchWhatsApp() {
+  if (!currentDispatchOrder) return;
+
+  const o = currentDispatchOrder;
+  const phoneClean = o.customer.phone.replace(/[^0-9]/g, "");
+  const targetPhone = phoneClean.startsWith("91") ? phoneClean : `91${phoneClean}`;
+
+  const message = `Namaste ${o.customer.fullName} garu! 🙏
+
+Your delicious homemade pickles from *Amma Ruchulu (అమ్మ రుచులు)* are packed and DISPATCHED! 🍛🛵
+
+🆔 *Order ID:* ${o.orderId}
+📦 *Items:* ${o.items.map(i => `${i.name} (${i.weight})`).join(', ')}
+📍 *Delivery To:* ${o.customer.streetAddress}
+💰 *Total Payable:* ₹${o.totals.grandTotal} (${o.paymentMode.toUpperCase()})
+
+Our local delivery rider is on the way to your doorstep. For any help, call us at +91 8341643180.
+
+Thank you for supporting homemade Andhra Ruchulu! ❤️`;
+
+  const url = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+
+  showDashboardToast(`Opening WhatsApp message for ${o.customer.fullName}...`);
+}
+
+// Mark order as dispatched
+function markOrderDispatched() {
+  if (!currentDispatchOrder) return;
+  updateOrderStatus(currentDispatchOrder.orderId, "processing");
+  showDashboardToast(`Order ${currentDispatchOrder.orderId} marked as DISPATCHED / PREPARING!`);
+  closeLocalDispatchModal();
+}
+
+// Shiprocket Modal Handlers
+function openShiprocketModal() {
+  const modal = document.getElementById("shiprocket-modal");
+  if (modal) {
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+}
+
+function closeShiprocketModal() {
+  const modal = document.getElementById("shiprocket-modal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+}
+
+function saveShiprocketSettings() {
+  const email = document.getElementById("shiprocket-email-input")?.value.trim();
+  const pass = document.getElementById("shiprocket-password-input")?.value.trim();
+  const pin = document.getElementById("shiprocket-pincode-input")?.value.trim();
+
+  if (!email || !pass) {
+    alert("Please enter both Shiprocket login email and password.");
+    return;
+  }
+
+  localStorage.setItem("amma_shiprocket_email", email);
+  localStorage.setItem("amma_shiprocket_pass", pass);
+  localStorage.setItem("amma_shiprocket_pincode", pin || "500098");
+
+  closeShiprocketModal();
+  showDashboardToast("Shiprocket Settings Saved! Kitchen pickup set to Parvathapur.");
+}
+
+function disconnectShiprocket() {
+  if (confirm("Disconnect Shiprocket settings?")) {
+    localStorage.removeItem("amma_shiprocket_email");
+    localStorage.removeItem("amma_shiprocket_pass");
+    closeShiprocketModal();
+    showDashboardToast("Shiprocket disconnected.");
   }
 }
