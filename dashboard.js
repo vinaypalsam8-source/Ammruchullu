@@ -81,8 +81,8 @@ let supabaseClient = null;
 
 function getSupabaseConfig() {
   return {
-    url: localStorage.getItem("amma_supabase_url") || "",
-    anonKey: localStorage.getItem("amma_supabase_key") || ""
+    url: localStorage.getItem("amma_supabase_url") || "https://ifodvvqzpuoyhfwjtclw.supabase.co",
+    anonKey: localStorage.getItem("amma_supabase_key") || "sb_publishable_nyRqCbF7fvOJ7UMZ2jISSw_mX5XXkqo"
   };
 }
 

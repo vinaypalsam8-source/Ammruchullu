@@ -840,10 +840,10 @@ function completeOrderPlacement(orderData) {
   showToast(`🎉 Order ${orderData.orderId} Placed! Sending WhatsApp Notification...`, "success");
 }
 
-// Supabase Cloud Configuration (Replace with your project keys or configure via Dashboard)
+// Supabase Cloud Configuration (Active Cloud Database)
 const SUPABASE_CONFIG = {
-  url: localStorage.getItem("amma_supabase_url") || "",
-  anonKey: localStorage.getItem("amma_supabase_key") || ""
+  url: localStorage.getItem("amma_supabase_url") || "https://ifodvvqzpuoyhfwjtclw.supabase.co",
+  anonKey: localStorage.getItem("amma_supabase_key") || "sb_publishable_nyRqCbF7fvOJ7UMZ2jISSw_mX5XXkqo"
 };
 
 function getSupabaseClient() {
