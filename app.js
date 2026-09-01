@@ -13,7 +13,7 @@ const STORE_CONFIG = {
   defaultDeliveryFee: 40
 };
 
-// 6 Signature Products with 250g, 500g, 1kg prices and photos
+// 8 Signature Products with 250g, 500g, 1kg prices and photos
 const PRODUCTS = [
   {
     id: "mango-pickle",
@@ -128,6 +128,44 @@ const PRODUCTS = [
     },
     ingredients: "Fresh Sea Fish Fillet Chunks (Boneless), Pure Cold-Pressed Oil, Tamarind Paste, Mustard, Fenugreek, Garlic, Curry Leaves, Red Chili Powder, Sea Salt.",
     benefits: "Rich in Omega-3 fatty acids, authentic coastal Andhra homestyle recipe."
+  },
+  {
+    id: "gongura-pickle",
+    name: "Gongura Pickle (Sorrel Leaf)",
+    teluguName: "గోంగూర పచ్చడి",
+    category: "veg",
+    tagline: "Andhra's Pride — Tangy Wild Sorrel Leaves Slow-Cooked with Aromatic Spices & Sesame Oil",
+    badge: "Andhra Special ★★★★★",
+    spiceLevel: "🔥🔥🔥 Tangy & Fiery",
+    shelfLife: "6 Months",
+    image: "gongura_pickle.jpg",
+    fallbackImage: "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=600&auto=format&fit=crop&q=80",
+    prices: {
+      "250g": 110,
+      "500g": 210,
+      "1kg": 400
+    },
+    ingredients: "Fresh Wild Gongura (Sorrel) Leaves, Cold-Pressed Sesame Oil, Guntur Red Chili Powder, Mustard Seeds, Fenugreek (Menthulu), Garlic Cloves, Curry Leaves, Turmeric, Natural Sea Salt.",
+    benefits: "Rich in Iron & Folic Acid, authentic Andhra village recipe, zero preservatives, great immunity booster."
+  },
+  {
+    id: "garlic-pickle",
+    name: "Spicy Garlic Pickle (Whole Cloves)",
+    teluguName: "వెల్లుల్లి పచ్చడి",
+    category: "veg",
+    tagline: "Whole Garlic Cloves Slow-Marinated in Rich Chili Oil with Traditional Andhra Tempering",
+    badge: "New Arrival 🧄",
+    spiceLevel: "🔥🔥 Spicy & Pungent",
+    shelfLife: "9 Months",
+    image: "garlic_pickle.jpg",
+    fallbackImage: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=600&auto=format&fit=crop&q=80",
+    prices: {
+      "250g": 140,
+      "500g": 270,
+      "1kg": 520
+    },
+    ingredients: "Fresh Whole Garlic Cloves, Cold-Pressed Sesame Oil, Red Chili Powder, Mustard Seeds, Fenugreek, Turmeric, Asafoetida (Hing), Curry Leaves, Lemon Extract, Natural Sea Salt.",
+    benefits: "Natural antibiotic & immunity booster, aids digestion, rich in allicin, zero artificial additives."
   }
 ];
 
@@ -140,7 +178,9 @@ let state = {
     "usirikaya-pickle": "500g",
     "mutton-pickle": "500g",
     "chicken-pickle": "500g",
-    "fish-pickle": "500g"
+    "fish-pickle": "500g",
+    "gongura-pickle": "500g",
+    "garlic-pickle": "500g"
   },
   cart: [],
   discountCode: "",
