@@ -858,11 +858,11 @@ function closeCheckoutModal() {
   modal.classList.remove("flex");
 }
 
-// Complete Order Placement and AUTOMATICALLY Notify via WhatsApp
+// Complete Order Placement Directly on Website (No WhatsApp Redirect)
 function completeOrderPlacement(orderData) {
   closeCheckoutModal();
 
-  // Save order to store owner history for Dashboard
+  // Save order to store owner history and Supabase Cloud Database
   saveOrderToHistory(orderData);
 
   // Clear cart
@@ -871,23 +871,10 @@ function completeOrderPlacement(orderData) {
   updateCartUI();
   updateDirectOrderTotals();
 
-  // Generate universal WhatsApp notification link
-  const rawMessage = generateWhatsAppOrderMessage(orderData);
-  const whatsappUrl = `https://api.whatsapp.com/send?phone=${STORE_CONFIG.whatsappNumber}&text=${encodeURIComponent(rawMessage)}`;
+  // Render on-screen confirmation modal with printable receipt
+  renderOrderSuccessModal(orderData);
 
-  // Render on-screen confirmation modal with receipt
-  renderOrderSuccessModal(orderData, whatsappUrl);
-
-  showToast(`🎉 Order ${orderData.orderId} Placed! Opening WhatsApp...`, "success");
-
-  // AUTOMATIC REDIRECT: Seamlessly open WhatsApp app on mobile/desktop without requiring clicks
-  setTimeout(() => {
-    try {
-      window.location.href = whatsappUrl;
-    } catch (e) {
-      window.open(whatsappUrl, "_blank");
-    }
-  }, 600);
+  showToast(`🎉 Order ${orderData.orderId} Placed Successfully!`, "success");
 }
 
 // Supabase Cloud Configuration (Active Cloud Database)
@@ -1012,23 +999,23 @@ function renderOrderSuccessModal(orderData, whatsappUrl) {
         </p>
       </div>
 
-      <!-- Automatic WhatsApp Notification Banner -->
-      <div class="my-4 p-4 bg-emerald-600 text-white rounded-2xl shadow-lg border-2 border-emerald-400 text-center space-y-2">
+      <!-- Order Status Alert Banner -->
+      <div class="my-4 p-4 bg-emerald-800 text-white rounded-2xl shadow-lg border border-emerald-600 text-center space-y-3">
         <div class="flex items-center justify-center gap-2 font-bold text-sm">
           <i data-lucide="check-circle" class="w-5 h-5 text-amber-300"></i>
-          <span>Order Automatically Dispatched to WhatsApp!</span>
+          <span>Order Confirmed & Received by Kitchen!</span>
         </div>
         <p class="text-xs text-emerald-100">
-          Your order message has been automatically sent to Amma Ruchulu Kitchen (<strong class="text-white">+91 ${STORE_CONFIG.phone}</strong>).
+          Our team at Parvathapur kitchen has received your order and is packing your fresh pickles.
         </p>
-        <div class="pt-1">
+        <div>
           <a 
-            href="${whatsappUrl}" 
+            href="https://api.whatsapp.com/send?phone=${STORE_CONFIG.whatsappNumber}&text=${encodeURIComponent(generateWhatsAppOrderMessage(orderData))}" 
             target="_blank" 
-            class="inline-flex items-center justify-center gap-1.5 py-2 px-4 bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold rounded-xl transition border border-white/30"
+            class="inline-flex items-center justify-center gap-2 py-3 px-5 bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs rounded-xl shadow-md transition transform hover:scale-102 active:scale-98"
           >
-            <i data-lucide="message-circle" class="w-3.5 h-3.5 text-amber-300"></i>
-            <span>View or Resend WhatsApp Chat</span>
+            <i data-lucide="message-circle" class="w-4 h-4 text-white"></i>
+            <span>📲 Send Order on WhatsApp (+91 8341643180)</span>
           </a>
         </div>
       </div>
