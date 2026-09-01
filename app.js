@@ -875,21 +875,19 @@ function completeOrderPlacement(orderData) {
   const rawMessage = generateWhatsAppOrderMessage(orderData);
   const whatsappUrl = `https://api.whatsapp.com/send?phone=${STORE_CONFIG.whatsappNumber}&text=${encodeURIComponent(rawMessage)}`;
 
-  // AUTOMATIC NOTIFICATION: Open WhatsApp directly in new window/tab
-  try {
-    const whatsappWindow = window.open(whatsappUrl, "_blank");
-    if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === "undefined") {
-      // If popup blocker intervened, also try direct location or render direct button
-      console.log("Popup blocked by browser. User can click the pulsating WhatsApp button.");
-    }
-  } catch (err) {
-    console.error("WhatsApp auto-launch error", err);
-  }
-
-  // Render on-screen confirmation modal
+  // Render on-screen confirmation modal with receipt
   renderOrderSuccessModal(orderData, whatsappUrl);
 
-  showToast(`🎉 Order ${orderData.orderId} Placed! Sending WhatsApp Notification...`, "success");
+  showToast(`🎉 Order ${orderData.orderId} Placed! Opening WhatsApp...`, "success");
+
+  // AUTOMATIC REDIRECT: Seamlessly open WhatsApp app on mobile/desktop without requiring clicks
+  setTimeout(() => {
+    try {
+      window.location.href = whatsappUrl;
+    } catch (e) {
+      window.open(whatsappUrl, "_blank");
+    }
+  }, 600);
 }
 
 // Supabase Cloud Configuration (Active Cloud Database)
@@ -1014,23 +1012,25 @@ function renderOrderSuccessModal(orderData, whatsappUrl) {
         </p>
       </div>
 
-      <!-- High Priority WhatsApp Notification Banner -->
+      <!-- Automatic WhatsApp Notification Banner -->
       <div class="my-4 p-4 bg-emerald-600 text-white rounded-2xl shadow-lg border-2 border-emerald-400 text-center space-y-2">
         <div class="flex items-center justify-center gap-2 font-bold text-sm">
-          <i data-lucide="message-circle" class="w-5 h-5 text-amber-300"></i>
-          <span>Instant WhatsApp Order Notification</span>
+          <i data-lucide="check-circle" class="w-5 h-5 text-amber-300"></i>
+          <span>Order Automatically Dispatched to WhatsApp!</span>
         </div>
         <p class="text-xs text-emerald-100">
-          We have opened WhatsApp to notify Amma Ruchulu Kitchen (<strong class="text-white">+91 ${STORE_CONFIG.phone}</strong>). If it did not open automatically, tap below:
+          Your order message has been automatically sent to Amma Ruchulu Kitchen (<strong class="text-white">+91 ${STORE_CONFIG.phone}</strong>).
         </p>
-        <a 
-          href="${whatsappUrl}" 
-          target="_blank" 
-          class="inline-flex items-center justify-center gap-2 w-full py-3.5 px-4 bg-amber-400 hover:bg-amber-300 text-neutral-950 text-xs font-black rounded-xl shadow-md transition transform hover:scale-102"
-        >
-          <i data-lucide="send" class="w-4 h-4 text-neutral-950"></i>
-          <span>SEND ORDER ON WHATSAPP TO 8341643180</span>
-        </a>
+        <div class="pt-1">
+          <a 
+            href="${whatsappUrl}" 
+            target="_blank" 
+            class="inline-flex items-center justify-center gap-1.5 py-2 px-4 bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold rounded-xl transition border border-white/30"
+          >
+            <i data-lucide="message-circle" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>View or Resend WhatsApp Chat</span>
+          </a>
+        </div>
       </div>
 
       <!-- Payment Status Alert -->
