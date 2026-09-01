@@ -858,7 +858,7 @@ function closeCheckoutModal() {
   modal.classList.remove("flex");
 }
 
-// Complete Order Placement & AUTOMATICALLY Launch WhatsApp Message
+// Complete Order Placement & DIRECTLY Open WhatsApp (No Popups)
 function completeOrderPlacement(orderData) {
   closeCheckoutModal();
 
@@ -875,19 +875,10 @@ function completeOrderPlacement(orderData) {
   const rawMessage = generateWhatsAppOrderMessage(orderData);
   const whatsappUrl = `https://api.whatsapp.com/send?phone=${STORE_CONFIG.whatsappNumber}&text=${encodeURIComponent(rawMessage)}`;
 
-  // Render on-screen confirmation modal with printable receipt
-  renderOrderSuccessModal(orderData);
+  showToast(`🎉 Opening WhatsApp with your order...`, "success");
 
-  showToast(`🎉 Order ${orderData.orderId} Placed! Sending WhatsApp message...`, "success");
-
-  // AUTOMATIC WHATSAPP LAUNCH: Automatically opens WhatsApp with pre-filled order text
-  setTimeout(() => {
-    try {
-      window.location.href = whatsappUrl;
-    } catch (e) {
-      window.open(whatsappUrl, "_blank");
-    }
-  }, 500);
+  // DIRECT WHATSAPP LAUNCH: Immediately redirects directly to WhatsApp
+  window.location.href = whatsappUrl;
 }
 
 // Supabase Cloud Configuration (Active Cloud Database)
