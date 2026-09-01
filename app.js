@@ -862,7 +862,7 @@ function closeCheckoutModal() {
 function completeOrderPlacement(orderData) {
   closeCheckoutModal();
 
-  // Save order to store owner history and Supabase Cloud Database
+  // Save order to store owner history and Supabase Cloud Database (background)
   saveOrderToHistory(orderData);
 
   // Clear cart
@@ -875,10 +875,18 @@ function completeOrderPlacement(orderData) {
   const rawMessage = generateWhatsAppOrderMessage(orderData);
   const whatsappUrl = `https://api.whatsapp.com/send?phone=${STORE_CONFIG.whatsappNumber}&text=${encodeURIComponent(rawMessage)}`;
 
-  showToast(`🎉 Opening WhatsApp with your order...`, "success");
+  showToast(`✅ Order placed! Opening WhatsApp...`, "success");
 
-  // DIRECT WHATSAPP LAUNCH: Immediately redirects directly to WhatsApp
-  window.location.href = whatsappUrl;
+  // DIRECT WHATSAPP LAUNCH (Most Reliable Method):
+  // Use window.open() which browsers NEVER block when called from a click event.
+  // On mobile: opens WhatsApp app directly.
+  // On desktop: opens WhatsApp Web.
+  const opened = window.open(whatsappUrl, "_blank");
+
+  // Fallback: if popup was blocked (rare), redirect the page instead
+  if (!opened || opened.closed || typeof opened.closed === "undefined") {
+    window.location.href = whatsappUrl;
+  }
 }
 
 // Supabase Cloud Configuration (Active Cloud Database)
