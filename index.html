@@ -554,6 +554,88 @@
           </div>
         </div>
 
+        <!-- 7. GONGURA PICKLE -->
+        <div class="product-card bg-white rounded-3xl border border-amber-200 shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+          <div class="relative overflow-hidden bg-amber-950/20 h-64 sm:h-72 cursor-pointer" onclick="openProductDetails('gongura-pickle')">
+            <img src="gongura_pickle.jpg" alt="Gongura Pickle" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1596797038530-2c107229654b?w=600'" class="product-img w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 block" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+            <div class="absolute top-3 left-3 flex flex-col gap-1 z-10">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black text-white bg-emerald-700 shadow-lg border border-white/20"><span class="w-2 h-2 rounded-full bg-emerald-300"></span>100% Pure Veg</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500 text-neutral-950 shadow-md">Andhra Special ★★★★★</span>
+            </div>
+            <button type="button" onclick="event.stopPropagation(); openPhotoModal('gongura_pickle.jpg', 'Gongura Pickle', 'గోంగూర పచ్చడి', 'https://images.unsplash.com/photo-1596797038530-2c107229654b?w=600')" title="View Full Photo" class="absolute top-3 right-3 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition shadow-md z-10"><i data-lucide="maximize-2" class="w-4 h-4 text-amber-300"></i></button>
+            <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 shadow-md"><span class="font-bold flex items-center gap-1">🌶️ 🔥🔥🔥 Tangy &amp; Fiery</span><span class="text-amber-300 font-semibold">⏳ 6 Months</span></div>
+          </div>
+          <div class="p-5 sm:p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-1">
+                <div>
+                  <h3 class="font-bold text-lg sm:text-xl text-amber-950 font-cinzel leading-snug group-hover:text-red-800 transition-colors">Gongura Pickle (Sorrel Leaf)</h3>
+                  <p class="text-xs sm:text-sm font-indic text-amber-800 font-bold mt-0.5">గోంగూర పచ్చడి</p>
+                </div>
+                <button onclick="openProductDetails('gongura-pickle')" class="text-amber-800 hover:text-red-700 p-1.5 rounded-xl hover:bg-amber-100/70 text-xs font-semibold flex items-center gap-1 transition border border-amber-200"><i data-lucide="info" class="w-4 h-4"></i></button>
+              </div>
+              <p class="text-xs text-neutral-600 line-clamp-2 mt-1.5 leading-relaxed">Andhra's Pride — Tangy Wild Sorrel Leaves Slow-Cooked with Aromatic Spices &amp; Sesame Oil</p>
+              <div class="mt-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-300">
+                <div class="flex items-center justify-between text-xs font-bold text-neutral-800 mb-2">
+                  <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3.5 h-3.5 text-amber-800"></i> Select Pack Size:</span>
+                  <span class="text-red-900 font-black text-sm" id="label-price-gongura-pickle">Selected: ₹210</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button type="button" onclick="selectProductWeight('gongura-pickle', '250g')" class="weight-btn text-xs py-2 px-1 rounded-xl font-bold border transition text-center flex flex-col items-center justify-center bg-white hover:bg-amber-100 text-amber-950 border-amber-300 shadow-2xs" id="btn-weight-gongura-pickle-250g"><span class="font-extrabold">250g</span><span class="text-xs font-black text-red-800">₹110</span></button>
+                  <button type="button" onclick="selectProductWeight('gongura-pickle', '500g')" class="weight-btn active text-xs py-2 px-1 rounded-xl font-bold border transition text-center flex flex-col items-center justify-center bg-amma-red text-white border-amma-red shadow-md scale-102" id="btn-weight-gongura-pickle-500g"><span class="font-extrabold">500g</span><span class="text-xs font-black text-amber-200">₹210</span></button>
+                  <button type="button" onclick="selectProductWeight('gongura-pickle', '1kg')" class="weight-btn text-xs py-2 px-1 rounded-xl font-bold border transition text-center flex flex-col items-center justify-center bg-white hover:bg-amber-100 text-amber-950 border-amber-300 shadow-2xs" id="btn-weight-gongura-pickle-1kg"><span class="font-extrabold">1kg</span><span class="text-xs font-black text-red-800">₹400</span></button>
+                </div>
+              </div>
+            </div>
+            <div class="mt-5 pt-3 border-t border-amber-100 flex items-center gap-2.5">
+              <button onclick="addToCart('gongura-pickle')" class="flex-1 bg-amber-100 hover:bg-amber-200 text-amber-950 font-extrabold py-3 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition border border-amber-300 shadow-xs"><i data-lucide="shopping-bag" class="w-4 h-4 text-red-800"></i> Add to Cart</button>
+              <button onclick="quickBuy('gongura-pickle')" class="flex-1 bg-gradient-to-r from-amma-red to-amma-redDark hover:from-amma-redDark hover:to-black text-white font-extrabold py-3 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-md"><i data-lucide="zap" class="w-4 h-4 text-amber-300"></i> Buy Now</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. GARLIC PICKLE -->
+        <div class="product-card bg-white rounded-3xl border border-amber-200 shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+          <div class="relative overflow-hidden bg-amber-950/20 h-64 sm:h-72 cursor-pointer" onclick="openProductDetails('garlic-pickle')">
+            <img src="garlic_pickle.jpg" alt="Spicy Garlic Pickle" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=600'" class="product-img w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 block" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+            <div class="absolute top-3 left-3 flex flex-col gap-1 z-10">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black text-white bg-emerald-700 shadow-lg border border-white/20"><span class="w-2 h-2 rounded-full bg-emerald-300"></span>100% Pure Veg</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500 text-neutral-950 shadow-md">New Arrival 🧄</span>
+            </div>
+            <button type="button" onclick="event.stopPropagation(); openPhotoModal('garlic_pickle.jpg', 'Spicy Garlic Pickle', 'వెల్లుల్లి పచ్చడి', 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=600')" title="View Full Photo" class="absolute top-3 right-3 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition shadow-md z-10"><i data-lucide="maximize-2" class="w-4 h-4 text-amber-300"></i></button>
+            <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 shadow-md"><span class="font-bold flex items-center gap-1">🌶️ 🔥🔥 Spicy &amp; Pungent</span><span class="text-amber-300 font-semibold">⏳ 9 Months</span></div>
+          </div>
+          <div class="p-5 sm:p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-1">
+                <div>
+                  <h3 class="font-bold text-lg sm:text-xl text-amber-950 font-cinzel leading-snug group-hover:text-red-800 transition-colors">Spicy Garlic Pickle</h3>
+                  <p class="text-xs sm:text-sm font-indic text-amber-800 font-bold mt-0.5">వెల్లుల్లి పచ్చడి</p>
+                </div>
+                <button onclick="openProductDetails('garlic-pickle')" class="text-amber-800 hover:text-red-700 p-1.5 rounded-xl hover:bg-amber-100/70 text-xs font-semibold flex items-center gap-1 transition border border-amber-200"><i data-lucide="info" class="w-4 h-4"></i></button>
+              </div>
+              <p class="text-xs text-neutral-600 line-clamp-2 mt-1.5 leading-relaxed">Whole Garlic Cloves Slow-Marinated in Rich Chili Oil with Traditional Andhra Tempering</p>
+              <div class="mt-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-300">
+                <div class="flex items-center justify-between text-xs font-bold text-neutral-800 mb-2">
+                  <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3.5 h-3.5 text-amber-800"></i> Select Pack Size:</span>
+                  <span class="text-red-900 font-black text-sm" id="label-price-garlic-pickle">Selected: ₹270</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button type="button" onclick="selectProductWeight('garlic-pickle', '250g')" class="weight-btn text-xs py-2 px-1 rounded-xl font-bold border transition text-center flex flex-col items-center justify-center bg-white hover:bg-amber-100 text-amber-950 border-amber-300 shadow-2xs" id="btn-weight-garlic-pickle-250g"><span class="font-extrabold">250g</span><span class="text-xs font-black text-red-800">₹140</span></button>
+                  <button type="button" onclick="selectProductWeight('garlic-pickle', '500g')" class="weight-btn active text-xs py-2 px-1 rounded-xl font-bold border transition text-center flex flex-col items-center justify-center bg-amma-red text-white border-amma-red shadow-md scale-102" id="btn-weight-garlic-pickle-500g"><span class="font-extrabold">500g</span><span class="text-xs font-black text-amber-200">₹270</span></button>
+                  <button type="button" onclick="selectProductWeight('garlic-pickle', '1kg')" class="weight-btn text-xs py-2 px-1 rounded-xl font-bold border transition text-center flex flex-col items-center justify-center bg-white hover:bg-amber-100 text-amber-950 border-amber-300 shadow-2xs" id="btn-weight-garlic-pickle-1kg"><span class="font-extrabold">1kg</span><span class="text-xs font-black text-red-800">₹520</span></button>
+                </div>
+              </div>
+            </div>
+            <div class="mt-5 pt-3 border-t border-amber-100 flex items-center gap-2.5">
+              <button onclick="addToCart('garlic-pickle')" class="flex-1 bg-amber-100 hover:bg-amber-200 text-amber-950 font-extrabold py-3 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition border border-amber-300 shadow-xs"><i data-lucide="shopping-bag" class="w-4 h-4 text-red-800"></i> Add to Cart</button>
+              <button onclick="quickBuy('garlic-pickle')" class="flex-1 bg-gradient-to-r from-amma-red to-amma-redDark hover:from-amma-redDark hover:to-black text-white font-extrabold py-3 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-md"><i data-lucide="zap" class="w-4 h-4 text-amber-300"></i> Buy Now</button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </section>
