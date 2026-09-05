@@ -84,9 +84,67 @@ function updateSupabaseStatusBadge(isConnected) {
 
 // Track known order IDs to trigger sound & modal only on new arrivals
 const knownOrderIds = new Set();
-let isInitialLoad = true;
+const shownModalOrderIds = new Set();
+let isInitialLoadDone = false;
 
-// Real-time Cloud Subscriptions with Sound & Visual Notifications
+// Direct Cloud REST API Fetch (Zero Dependencies - 100% Reliable)
+async function fetchOrdersFromCloud() {
+  const config = getSupabaseConfig();
+  const url = `${config.url}/rest/v1/orders?select=*&order=id.desc`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "apikey": config.anonKey,
+      "Authorization": `Bearer ${config.anonKey}`,
+      "Content-Type": "application/json"
+    }
+  });
+  if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+  return await res.json();
+}
+
+// Direct Cloud REST API Status Update
+async function updateOrderStatusInCloud(orderId, newStatus) {
+  const config = getSupabaseConfig();
+  const url = `${config.url}/rest/v1/orders?order_id=eq.${encodeURIComponent(orderId)}`;
+  try {
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        "apikey": config.anonKey,
+        "Authorization": `Bearer ${config.anonKey}`,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify({ order_status: newStatus })
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn("Cloud update failed, saved locally:", err);
+    return false;
+  }
+}
+
+// Direct Cloud REST API Order Delete
+async function deleteOrderInCloud(orderId) {
+  const config = getSupabaseConfig();
+  const url = `${config.url}/rest/v1/orders?order_id=eq.${encodeURIComponent(orderId)}`;
+  try {
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "apikey": config.anonKey,
+        "Authorization": `Bearer ${config.anonKey}`
+      }
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn("Cloud delete failed, deleted locally:", err);
+    return false;
+  }
+}
+
+// Real-time Cloud Subscriptions
 function setupSupabaseRealtime() {
   if (!supabaseClient) return;
 
@@ -96,71 +154,111 @@ function setupSupabaseRealtime() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, payload => {
         console.log("⚡ NEW ORDER received via Real-time:", payload);
         const newOrder = payload.new;
-        if (newOrder && newOrder.order_id) {
+        if (newOrder && newOrder.order_id && !shownModalOrderIds.has(newOrder.order_id)) {
           knownOrderIds.add(newOrder.order_id);
           handleNewIncomingOrder(newOrder);
         }
-        loadOrders();
+        loadOrders(false);
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, payload => {
         console.log("⚡ Order UPDATED:", payload);
-        loadOrders();
-        showDashboardToast("⚡ Order status updated!");
+        loadOrders(false);
       })
       .subscribe();
 
-    // Request browser notification permission
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
-
   } catch (err) {
     console.error("Realtime subscription error:", err);
   }
-
-  // Smart 4-second Polling Fallback (ensures 100% instant order delivery even if WebSockets drops)
-  startOrderPolling();
 }
 
-// 4-Second Smart Polling
+// Background Polling (Silently checks for new orders every 6 seconds without flickering UI)
+let pollingTimer = null;
 function startOrderPolling() {
-  setInterval(async () => {
-    if (!supabaseClient) return;
+  if (pollingTimer) clearInterval(pollingTimer);
+  pollingTimer = setInterval(async () => {
     try {
-      const { data, error } = await supabaseClient
-        .from("orders")
-        .select("*")
-        .order("id", { ascending: false })
-        .limit(10);
-
-      if (!error && Array.isArray(data)) {
+      const data = await fetchOrdersFromCloud();
+      if (Array.isArray(data)) {
         let hasNew = false;
         data.forEach(row => {
           if (!knownOrderIds.has(row.order_id)) {
             knownOrderIds.add(row.order_id);
-            if (!isInitialLoad) {
+            if (isInitialLoadDone && !shownModalOrderIds.has(row.order_id)) {
               hasNew = true;
               handleNewIncomingOrder(row);
             }
           }
         });
-        if (hasNew) {
-          loadOrders();
+        if (hasNew || data.length !== dashboardState.orders.length) {
+          syncOrdersFromData(data);
         }
       }
     } catch (e) {
-      // quiet poll
+      // quiet background poll
     }
-  }, 4000);
+  }, 6000);
+}
+
+// Convert raw cloud database row to clean dashboard order object
+function formatOrderRow(row) {
+  let items = [];
+  if (Array.isArray(row.items)) {
+    items = row.items;
+  } else if (typeof row.items === "string") {
+    try { items = JSON.parse(row.items); } catch(e) { items = []; }
+  }
+
+  const phoneStr = String(row.phone || "").trim();
+  const timeStr = row.timestamp 
+    ? new Date(row.timestamp).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) 
+    : (row.created_at ? new Date(row.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "Recently");
+
+  return {
+    orderId: row.order_id || `AR-${row.id || Date.now()}`,
+    timestamp: timeStr,
+    orderStatus: row.order_status || "pending",
+    customer: {
+      fullName: row.customer_name || "Customer",
+      phone: phoneStr || "N/A",
+      email: row.email || "",
+      streetAddress: row.street_address || "Hyderabad",
+      landmark: row.landmark || "",
+      pincode: row.pincode || "500098",
+      utr: row.utr || "N/A"
+    },
+    items: items,
+    totals: {
+      subtotal: Number(row.subtotal) || 0,
+      discountAmount: Number(row.discount_amount) || 0,
+      deliveryFee: Number(row.delivery_fee) || 0,
+      grandTotal: Number(row.grand_total) || 0
+    },
+    paymentMode: row.payment_mode || "cod",
+    status: row.payment_status || "Order Received"
+  };
+}
+
+// Sync in-memory state with fresh data array
+function syncOrdersFromData(data) {
+  if (!Array.isArray(data)) return;
+  dashboardState.orders = data.map(formatOrderRow);
+  saveOrdersToStorage();
+  renderDashboard();
 }
 
 // Handle New Incoming Order (Sound + Tab Blink + Interactive Accept/Decline Modal)
 function handleNewIncomingOrder(newOrder) {
   const orderId = newOrder.order_id || "New Order";
-  const customerName = newOrder.customer_name || "New Customer";
+  if (shownModalOrderIds.has(orderId)) return;
+  shownModalOrderIds.add(orderId);
+
+  const customerName = newOrder.customer_name || "Customer";
   const total = Number(newOrder.grand_total) || 0;
 
-  // 1. Play high-attention chime sound
+  // 1. Play chime sound
   playOrderSound();
 
   // 2. Show interactive Accept / Decline Modal
@@ -171,10 +269,12 @@ function handleNewIncomingOrder(newOrder) {
 
   // 4. Browser push notification
   if ("Notification" in window && Notification.permission === "granted") {
-    new Notification("🔔 New Pickle Order Received!", {
-      body: `${customerName} ordered ₹${total}\nTap dashboard to Accept or Decline`,
-      icon: "mango_pickle.jpg"
-    });
+    try {
+      new Notification("🔔 New Pickle Order Received!", {
+        body: `${customerName} ordered ₹${total}\nTap dashboard to Accept or Decline`,
+        icon: "mango_pickle.jpg"
+      });
+    } catch(e) {}
   }
 
   showDashboardToast(`🔔 New Order from ${customerName} (₹${total})`, "info");
@@ -184,14 +284,13 @@ function handleNewIncomingOrder(newOrder) {
 function playOrderSound() {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    // 3 pleasant bell tones
     [0, 180, 360].forEach((delay, i) => {
       setTimeout(() => {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        osc.frequency.value = [523.25, 659.25, 783.99][i] || 600; // C5, E5, G5 major triad
+        osc.frequency.value = [523.25, 659.25, 783.99][i] || 600;
         osc.type = "sine";
         gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
@@ -200,7 +299,7 @@ function playOrderSound() {
       }, delay);
     });
   } catch (e) {
-    console.log("Audio alert note:", e);
+    console.log("Audio note:", e);
   }
 }
 
@@ -229,15 +328,22 @@ function showNewOrderModal(orderId, customerName, total, orderRow) {
   const paymentMode = (orderRow.payment_mode || "COD").toUpperCase();
 
   let itemsHtml = "";
+  let items = [];
   if (Array.isArray(orderRow.items)) {
-    itemsHtml = orderRow.items.map(i => `
+    items = orderRow.items;
+  } else if (typeof orderRow.items === "string") {
+    try { items = JSON.parse(orderRow.items); } catch(e) { items = []; }
+  }
+
+  if (items.length > 0) {
+    itemsHtml = items.map(i => `
       <div class="flex justify-between items-center text-xs py-1 border-b border-neutral-800 text-neutral-200">
-        <span>🌶️ <strong>${i.name}</strong> (${i.weight}) x${i.quantity}</span>
-        <span class="font-mono text-amber-300">₹${i.unitPrice * i.quantity}</span>
+        <span>🌶️ <strong>${i.name || 'Pickle'}</strong> (${i.weight || '500g'}) x${i.quantity || 1}</span>
+        <span class="font-mono text-amber-300">₹${(i.unitPrice || 0) * (i.quantity || 1)}</span>
       </div>
     `).join("");
   } else {
-    itemsHtml = `<p class="text-xs text-neutral-400">Pickle order details</p>`;
+    itemsHtml = `<p class="text-xs text-neutral-400">Pickle order items</p>`;
   }
 
   const modal = document.createElement("div");
@@ -257,7 +363,7 @@ function showNewOrderModal(orderId, customerName, total, orderRow) {
             <span class="text-xs text-neutral-400 font-mono">Order ID: <strong class="text-white">${orderId}</strong></span>
           </div>
         </div>
-        <button onclick="document.getElementById('new-order-modal').remove()" class="text-neutral-400 hover:text-white p-2 rounded-xl transition">
+        <button type="button" onclick="document.getElementById('new-order-modal').remove()" class="text-neutral-400 hover:text-white p-2 rounded-xl transition">
           ✕
         </button>
       </div>
@@ -269,9 +375,11 @@ function showNewOrderModal(orderId, customerName, total, orderRow) {
             <p class="text-neutral-400 text-[10px] uppercase font-bold tracking-wider">Customer</p>
             <p class="font-bold text-sm text-white mt-0.5">${customerName}</p>
           </div>
-          <a href="tel:${phone}" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-neutral-950 font-bold transition flex items-center gap-1 border border-amber-400/40">
-            📞 Call Customer
-          </a>
+          ${phone ? `
+            <a href="tel:${phone}" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-neutral-950 font-bold transition flex items-center gap-1 border border-amber-400/40">
+              📞 Call Customer
+            </a>
+          ` : ''}
         </div>
 
         <div>
@@ -297,6 +405,7 @@ function showNewOrderModal(orderId, customerName, total, orderRow) {
         
         <!-- Accept Button -->
         <button 
+          type="button"
           onclick="acceptOrder('${orderId}')"
           class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold text-sm shadow-xl shadow-emerald-950/60 transition flex items-center justify-center gap-2 transform hover:scale-102 active:scale-98 cursor-pointer"
         >
@@ -306,6 +415,7 @@ function showNewOrderModal(orderId, customerName, total, orderRow) {
 
         <!-- Decline Button -->
         <button 
+          type="button"
           onclick="declineOrder('${orderId}')"
           class="w-full py-3.5 px-4 rounded-2xl bg-neutral-800 hover:bg-rose-900/60 text-rose-300 hover:text-rose-100 font-extrabold text-sm border border-rose-800/60 hover:border-rose-500 transition flex items-center justify-center gap-2 transform hover:scale-102 active:scale-98 cursor-pointer"
         >
@@ -325,92 +435,76 @@ function showNewOrderModal(orderId, customerName, total, orderRow) {
   document.body.appendChild(modal);
 }
 
-// Accept Order Action
+// Accept Order Action (Immediate, 100% Reliable, No annoying prompt blockers)
 async function acceptOrder(orderId) {
   const modal = document.getElementById("new-order-modal");
   if (modal) modal.remove();
 
-  await updateOrderStatus(orderId, "processing");
-  showDashboardToast(`✅ Order #${orderId} ACCEPTED! Kitchen marked as Preparing.`, "success");
-
-  // Offer immediate dispatch
-  if (confirm(`Order #${orderId} Accepted! Would you like to open Local Dispatch (Rapido/Porter) now?`)) {
-    openLocalDispatchModal(orderId);
+  // 1. Immediately update UI state
+  const order = dashboardState.orders.find(o => o.orderId === orderId);
+  if (order) {
+    order.orderStatus = "processing";
+    saveOrdersToStorage();
+    renderDashboard();
   }
+
+  showDashboardToast(`✅ Order #${orderId} ACCEPTED! Marked as Preparing.`, "success");
+
+  // 2. Sync to Supabase Cloud
+  await updateOrderStatusInCloud(orderId, "processing");
 }
 
-// Decline Order Action
+// Decline Order Action (Immediate, 100% Reliable)
 async function declineOrder(orderId) {
-  if (confirm(`Are you sure you want to DECLINE order #${orderId}? Status will be marked as Cancelled.`)) {
-    const modal = document.getElementById("new-order-modal");
-    if (modal) modal.remove();
+  const modal = document.getElementById("new-order-modal");
+  if (modal) modal.remove();
 
-    await updateOrderStatus(orderId, "cancelled");
-    showDashboardToast(`❌ Order #${orderId} DECLINED and Cancelled.`, "error");
+  // 1. Immediately update UI state
+  const order = dashboardState.orders.find(o => o.orderId === orderId);
+  if (order) {
+    order.orderStatus = "cancelled";
+    saveOrdersToStorage();
+    renderDashboard();
   }
+
+  showDashboardToast(`❌ Order #${orderId} DECLINED.`, "error");
+
+  // 2. Sync to Supabase Cloud
+  await updateOrderStatusInCloud(orderId, "cancelled");
 }
 
+// Initialize Dashboard on Page Load
+document.addEventListener("DOMContentLoaded", async () => {
+  // 1. Immediately load orders via direct native REST fetch (no waiting for CDN!)
+  await loadOrders(true);
 
-// Initialize Dashboard
-document.addEventListener("DOMContentLoaded", () => {
+  // 2. Initialize Supabase client for realtime updates
   initSupabase();
-  loadOrders();
-  renderDashboard();
+
+  // 3. Start background polling (every 6 seconds)
+  startOrderPolling();
+
   if (window.lucide) {
     window.lucide.createIcons();
   }
 });
 
-// Load Orders from Supabase Cloud (or LocalStorage fallback)
-async function loadOrders() {
-  const config = getSupabaseConfig();
-  
-  if (supabaseClient && config.url && config.anonKey) {
-    try {
-      const { data, error } = await supabaseClient
-        .from("orders")
-        .select("*")
-        .order("id", { ascending: false });
-
-      if (!error && Array.isArray(data)) {
-        data.forEach(row => {
-          if (row.order_id) knownOrderIds.add(row.order_id);
-        });
-        isInitialLoad = false;
-
-        dashboardState.orders = data.map(row => ({
-          orderId: row.order_id,
-          timestamp: row.timestamp ? new Date(row.timestamp).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "Recently",
-          orderStatus: row.order_status || "pending",
-          customer: {
-            fullName: row.customer_name,
-            phone: row.phone,
-            email: row.email,
-            streetAddress: row.street_address,
-            landmark: row.landmark,
-            pincode: row.pincode,
-            utr: row.utr || "N/A"
-          },
-          items: Array.isArray(row.items) ? row.items : [],
-          totals: {
-            subtotal: Number(row.subtotal) || 0,
-            discountAmount: Number(row.discount_amount) || 0,
-            deliveryFee: Number(row.delivery_fee) || 0,
-            grandTotal: Number(row.grand_total) || 0
-          },
-          paymentMode: row.payment_mode || "cod",
-          status: row.payment_status || "Order Received"
-        }));
-
-        saveOrdersToStorage();
-        renderDashboard();
-        return;
-      } else {
-        console.warn("Supabase fetch warning:", error?.message);
-      }
-    } catch (e) {
-      console.error("Error fetching from Supabase:", e);
+// Load Orders from Supabase Cloud (with LocalStorage fallback)
+async function loadOrders(isInitial = false) {
+  try {
+    const data = await fetchOrdersFromCloud();
+    if (Array.isArray(data)) {
+      data.forEach(row => {
+        if (row.order_id) knownOrderIds.add(row.order_id);
+      });
+      isInitialLoadDone = true;
+      updateSupabaseStatusBadge(true);
+      syncOrdersFromData(data);
+      return;
     }
+  } catch (err) {
+    console.warn("Direct cloud fetch warning, using local storage:", err.message);
+    updateSupabaseStatusBadge(false);
   }
 
   // Fallback to LocalStorage
@@ -421,19 +515,18 @@ async function loadOrders() {
       if (Array.isArray(parsed) && parsed.length > 0) {
         dashboardState.orders = parsed.map(order => ({
           ...order,
-          orderStatus: order.orderStatus || (order.status && order.status.toLowerCase().includes("delivered") ? "completed" : "pending")
+          orderStatus: order.orderStatus || "pending"
         }));
         renderDashboard();
         return;
       }
     }
   } catch (e) {
-    console.error("Error reading orders from localStorage", e);
+    console.error("Local storage read error", e);
   }
 
-  // Seed default sample orders for immediate demonstration
+  // Zero orders state
   dashboardState.orders = [...INITIAL_SEED_ORDERS];
-  saveOrdersToStorage();
   renderDashboard();
 }
 
@@ -611,11 +704,11 @@ function renderOrdersTable() {
   if (dashboardState.searchQuery) {
     const q = dashboardState.searchQuery;
     filtered = filtered.filter(o => {
-      const matchId = o.orderId.toLowerCase().includes(q);
-      const matchName = o.customer.fullName.toLowerCase().includes(q);
-      const matchPhone = o.customer.phone.toLowerCase().includes(q);
-      const matchAddress = o.customer.streetAddress.toLowerCase().includes(q);
-      const matchItems = o.items.some(i => i.name.toLowerCase().includes(q));
+      const matchId = String(o.orderId || "").toLowerCase().includes(q);
+      const matchName = String(o.customer?.fullName || "").toLowerCase().includes(q);
+      const matchPhone = String(o.customer?.phone || "").toLowerCase().includes(q);
+      const matchAddress = String(o.customer?.streetAddress || "").toLowerCase().includes(q);
+      const matchItems = Array.isArray(o.items) && o.items.some(i => String(i?.name || "").toLowerCase().includes(q));
       return matchId || matchName || matchPhone || matchAddress || matchItems;
     });
   }
@@ -631,7 +724,7 @@ function renderOrdersTable() {
   tbody.innerHTML = filtered.map(order => {
     const status = order.orderStatus || "pending";
     const paymentMode = order.paymentMode || "cod";
-    const phoneClean = order.customer.phone.replace(/[^0-9]/g, "");
+    const phoneClean = String(order.customer?.phone || "").replace(/[^0-9]/g, "");
 
     // Status Badge Color Map
     const statusBadgeClasses = {

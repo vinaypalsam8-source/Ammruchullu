@@ -110,6 +110,15 @@
         </button>
 
         <button 
+          onclick="loadOrders(false)" 
+          class="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-semibold flex items-center gap-1.5 transition border border-neutral-700 cursor-pointer"
+          title="Refresh orders from database"
+        >
+          <i data-lucide="refresh-cw" class="w-4 h-4 text-amber-400"></i>
+          <span class="hidden sm:inline">Refresh</span>
+        </button>
+
+        <button 
           onclick="resetOrdersToZero()" 
           class="px-3 py-2 rounded-xl bg-red-950/60 hover:bg-red-900/80 text-red-300 text-xs font-semibold flex items-center gap-1.5 transition border border-red-800/50"
           title="Reset and start dashboard with 0 orders"
@@ -649,7 +658,7 @@
     </div>
   </div>
 
-  <!-- Dashboard Script -->
-  <script src="dashboard.js"></script>
+  <!-- Dashboard Script with Cache-Buster -->
+  <script src="dashboard.js?v=4.0"></script>
 </body>
 </html>
