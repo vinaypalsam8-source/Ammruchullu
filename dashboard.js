@@ -9,72 +9,36 @@ let dashboardState = {
   searchQuery: ""
 };
 
-// Initial Sample Orders for immediate store management demo
-const INITIAL_SEED_ORDERS = [
-  {
-    orderId: "AR-2026-8921",
-    timestamp: "29/08/2026, 08:30:15 pm",
-    orderStatus: "completed",
-    customer: {
-      fullName: "Suresh Kumar",
-      phone: "9848022338",
-      email: "suresh.k@gmail.com",
-      streetAddress: "Flat 302, Sri Sai Residency, Road No 2",
-      landmark: "Near Hanuman Temple, Parvathapur",
-      pincode: "500098",
-      utr: "N/A"
-    },
-    items: [
-      { id: "mango-pickle", name: "Avakaya Mango Pickle", weight: "500g", unitPrice: 230, quantity: 2 },
-      { id: "chicken-pickle", name: "Andhra Chicken Pickle (Boneless)", weight: "500g", unitPrice: 420, quantity: 1 }
-    ],
-    totals: { subtotal: 880, discountAmount: 0, deliveryFee: 0, grandTotal: 880 },
-    paymentMode: "upi",
-    status: "UPI Paid (UTR: 423984719283)"
-  },
-  {
-    orderId: "AR-2026-7842",
-    timestamp: "29/08/2026, 07:15:20 pm",
-    orderStatus: "processing",
-    customer: {
-      fullName: "Lakshmi Narayana",
-      phone: "9876543210",
-      email: "lakshmi.n@yahoo.com",
-      streetAddress: "Plot 45, Sai Aishwarya Colony, Road No 1",
-      landmark: "Near Mediplus Pharmacy",
-      pincode: "500098",
-      utr: "N/A"
-    },
-    items: [
-      { id: "mutton-pickle", name: "Royal Mutton Pickle (Boneless)", weight: "1kg", unitPrice: 1300, quantity: 1 },
-      { id: "lemon-pickle", name: "Tangy Lemon Pickle", weight: "500g", unitPrice: 190, quantity: 1 }
-    ],
-    totals: { subtotal: 1490, discountAmount: 149, deliveryFee: 0, grandTotal: 1341 },
-    paymentMode: "credit",
-    status: "Credit Card (Pay via Card Machine on Delivery)"
-  },
-  {
-    orderId: "AR-2026-6519",
-    timestamp: "29/08/2026, 06:40:10 pm",
-    orderStatus: "pending",
-    customer: {
-      fullName: "Anand Rao",
-      phone: "9440123456",
-      email: "anand.rao@outlook.com",
-      streetAddress: "House No 4-12/1, Boduppal Main Road",
-      landmark: "Opposite More Supermarket, Peerzadiguda",
-      pincode: "500039",
-      utr: "N/A"
-    },
-    items: [
-      { id: "usirikaya-pickle", name: "Usirikaya (Amla) Pickle", weight: "500g", unitPrice: 250, quantity: 2 },
-      { id: "mango-pickle", name: "Avakaya Mango Pickle", weight: "1kg", unitPrice: 440, quantity: 1 }
-    ],
-    totals: { subtotal: 940, discountAmount: 0, deliveryFee: 0, grandTotal: 940 },
-    paymentMode: "cod",
-    status: "Cash on Delivery (Pay upon receipt)"
+// Zero initial orders - Fresh clean store start
+const INITIAL_SEED_ORDERS = [];
+
+// Reset all orders to 0 (Clear Supabase Cloud & LocalStorage)
+async function resetOrdersToZero() {
+  if (!confirm("⚠️ Are you sure you want to reset and delete ALL orders? Dashboard will start with ZERO orders.")) {
+    return;
   }
-];
+
+  // 1. Clear LocalStorage
+  localStorage.removeItem("amma_ruchulu_all_orders");
+  dashboardState.orders = [];
+  renderDashboard();
+
+  // 2. Clear Supabase Cloud Table
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("orders").delete().gt("id", 0);
+      if (error) {
+        console.warn("Supabase clear error:", error.message);
+      } else {
+        console.log("✅ Supabase orders table cleared to 0");
+      }
+    } catch (err) {
+      console.error("Error clearing Supabase:", err);
+    }
+  }
+
+  showDashboardToast("✅ All orders cleared! Dashboard reset to 0 orders.", "success");
+}
 
 // Supabase Cloud Configuration
 let supabaseClient = null;
