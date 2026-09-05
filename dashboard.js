@@ -82,6 +82,10 @@ function updateSupabaseStatusBadge(isConnected) {
   }
 }
 
+// Track known order IDs to trigger sound & modal only on new arrivals
+const knownOrderIds = new Set();
+let isInitialLoad = true;
+
 // Real-time Cloud Subscriptions with Sound & Visual Notifications
 function setupSupabaseRealtime() {
   if (!supabaseClient) return;
@@ -91,31 +95,12 @@ function setupSupabaseRealtime() {
       .channel("public:orders")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, payload => {
         console.log("⚡ NEW ORDER received via Real-time:", payload);
-        loadOrders();
-        
         const newOrder = payload.new;
-        const customerName = newOrder.customer_name || "New Customer";
-        const total = newOrder.grand_total || 0;
-        const orderId = newOrder.order_id || "New Order";
-
-        // 1. Play notification sound
-        playOrderSound();
-
-        // 2. Show big popup notification banner on dashboard
-        showNewOrderBanner(orderId, customerName, total, newOrder);
-
-        // 3. Blink the browser tab title
-        blinkTabTitle(`🔔 NEW ORDER — ${orderId}`);
-
-        // 4. Browser push notification (if allowed)
-        if (Notification.permission === "granted") {
-          new Notification("🔔 New Pickle Order!", {
-            body: `${customerName} ordered ₹${total} worth of pickles!\nOrder ID: ${orderId}`,
-            icon: "mango_pickle.jpg"
-          });
+        if (newOrder && newOrder.order_id) {
+          knownOrderIds.add(newOrder.order_id);
+          handleNewIncomingOrder(newOrder);
         }
-
-        showDashboardToast(`🔔 NEW ORDER from ${customerName} — ₹${total}!`);
+        loadOrders();
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, payload => {
         console.log("⚡ Order UPDATED:", payload);
@@ -132,90 +117,239 @@ function setupSupabaseRealtime() {
   } catch (err) {
     console.error("Realtime subscription error:", err);
   }
+
+  // Smart 4-second Polling Fallback (ensures 100% instant order delivery even if WebSockets drops)
+  startOrderPolling();
 }
 
-// Play notification sound when new order arrives
+// 4-Second Smart Polling
+function startOrderPolling() {
+  setInterval(async () => {
+    if (!supabaseClient) return;
+    try {
+      const { data, error } = await supabaseClient
+        .from("orders")
+        .select("*")
+        .order("id", { ascending: false })
+        .limit(10);
+
+      if (!error && Array.isArray(data)) {
+        let hasNew = false;
+        data.forEach(row => {
+          if (!knownOrderIds.has(row.order_id)) {
+            knownOrderIds.add(row.order_id);
+            if (!isInitialLoad) {
+              hasNew = true;
+              handleNewIncomingOrder(row);
+            }
+          }
+        });
+        if (hasNew) {
+          loadOrders();
+        }
+      }
+    } catch (e) {
+      // quiet poll
+    }
+  }, 4000);
+}
+
+// Handle New Incoming Order (Sound + Tab Blink + Interactive Accept/Decline Modal)
+function handleNewIncomingOrder(newOrder) {
+  const orderId = newOrder.order_id || "New Order";
+  const customerName = newOrder.customer_name || "New Customer";
+  const total = Number(newOrder.grand_total) || 0;
+
+  // 1. Play high-attention chime sound
+  playOrderSound();
+
+  // 2. Show interactive Accept / Decline Modal
+  showNewOrderModal(orderId, customerName, total, newOrder);
+
+  // 3. Blink tab title
+  blinkTabTitle(`🔔 NEW ORDER — ${orderId}`);
+
+  // 4. Browser push notification
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("🔔 New Pickle Order Received!", {
+      body: `${customerName} ordered ₹${total}\nTap dashboard to Accept or Decline`,
+      icon: "mango_pickle.jpg"
+    });
+  }
+
+  showDashboardToast(`🔔 New Order from ${customerName} (₹${total})`, "info");
+}
+
+// Play audible chime when new order arrives
 function playOrderSound() {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    // Play 3 ascending beeps
-    [0, 200, 400].forEach((delay, i) => {
+    // 3 pleasant bell tones
+    [0, 180, 360].forEach((delay, i) => {
       setTimeout(() => {
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        oscillator.frequency.value = 600 + (i * 200); // ascending pitch
-        oscillator.type = "sine";
-        gainNode.gain.value = 0.3;
-        oscillator.start(audioCtx.currentTime);
-        oscillator.stop(audioCtx.currentTime + 0.15);
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = [523.25, 659.25, 783.99][i] || 600; // C5, E5, G5 major triad
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.5);
       }, delay);
     });
   } catch (e) {
-    console.log("Audio not available:", e);
+    console.log("Audio alert note:", e);
   }
 }
 
-// Blink browser tab title for attention
+// Blink browser tab title
 function blinkTabTitle(newTitle) {
   const originalTitle = document.title;
   let isOriginal = true;
   const blinkInterval = setInterval(() => {
     document.title = isOriginal ? newTitle : originalTitle;
     isOriginal = !isOriginal;
-  }, 800);
-  // Stop blinking after 15 seconds
+  }, 700);
   setTimeout(() => {
     clearInterval(blinkInterval);
     document.title = originalTitle;
-  }, 15000);
+  }, 20000);
 }
 
-// Show big animated notification banner on dashboard
-function showNewOrderBanner(orderId, customerName, total, orderRow) {
-  const existingBanner = document.getElementById("new-order-banner");
-  if (existingBanner) existingBanner.remove();
+// Interactive Accept & Decline Modal when order arrives
+function showNewOrderModal(orderId, customerName, total, orderRow) {
+  const existing = document.getElementById("new-order-modal");
+  if (existing) existing.remove();
 
-  const itemsText = Array.isArray(orderRow.items) 
-    ? orderRow.items.map(i => `${i.name} (${i.weight}) x${i.quantity}`).join(", ")
-    : "Pickle order";
+  const phone = orderRow.phone || "";
+  const address = orderRow.street_address || "Parvathapur, Hyderabad";
+  const landmark = orderRow.landmark || "";
+  const paymentMode = (orderRow.payment_mode || "COD").toUpperCase();
 
-  const banner = document.createElement("div");
-  banner.id = "new-order-banner";
-  banner.className = "fixed top-4 left-1/2 -translate-x-1/2 z-[9999] max-w-lg w-full mx-4";
-  banner.innerHTML = `
-    <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-2xl shadow-2xl p-5 border-2 border-emerald-300 animate-pulse">
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex-1">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-2xl">🔔</span>
-            <span class="font-extrabold text-lg">NEW ORDER!</span>
+  let itemsHtml = "";
+  if (Array.isArray(orderRow.items)) {
+    itemsHtml = orderRow.items.map(i => `
+      <div class="flex justify-between items-center text-xs py-1 border-b border-neutral-800 text-neutral-200">
+        <span>🌶️ <strong>${i.name}</strong> (${i.weight}) x${i.quantity}</span>
+        <span class="font-mono text-amber-300">₹${i.unitPrice * i.quantity}</span>
+      </div>
+    `).join("");
+  } else {
+    itemsHtml = `<p class="text-xs text-neutral-400">Pickle order details</p>`;
+  }
+
+  const modal = document.createElement("div");
+  modal.id = "new-order-modal";
+  modal.className = "fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in";
+  modal.innerHTML = `
+    <div class="bg-neutral-900 text-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-400/80 relative space-y-5">
+      
+      <!-- Top Alert Header -->
+      <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-2xl animate-bounce">
+            🔔
           </div>
-          <div class="space-y-1 text-sm">
-            <p><strong>🆔</strong> ${orderId}</p>
-            <p><strong>👤</strong> ${customerName}</p>
-            <p><strong>📦</strong> ${itemsText}</p>
-            <p><strong>💰</strong> ₹${total}</p>
-            <p><strong>💳</strong> ${orderRow.payment_mode || "COD"}</p>
-            <p><strong>📍</strong> ${orderRow.street_address || "Hyderabad"}</p>
+          <div>
+            <h3 class="font-cinzel font-black text-lg text-amber-300">New Order Received!</h3>
+            <span class="text-xs text-neutral-400 font-mono">Order ID: <strong class="text-white">${orderId}</strong></span>
           </div>
         </div>
-        <button onclick="document.getElementById('new-order-banner').remove()" class="p-2 hover:bg-white/20 rounded-xl transition text-white/80 hover:text-white">
+        <button onclick="document.getElementById('new-order-modal').remove()" class="text-neutral-400 hover:text-white p-2 rounded-xl transition">
           ✕
         </button>
       </div>
+
+      <!-- Customer & Bill Summary Card -->
+      <div class="bg-neutral-950 p-4 rounded-2xl border border-neutral-800 space-y-2.5 text-xs">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-neutral-400 text-[10px] uppercase font-bold tracking-wider">Customer</p>
+            <p class="font-bold text-sm text-white mt-0.5">${customerName}</p>
+          </div>
+          <a href="tel:${phone}" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-neutral-950 font-bold transition flex items-center gap-1 border border-amber-400/40">
+            📞 Call Customer
+          </a>
+        </div>
+
+        <div>
+          <p class="text-neutral-400 text-[10px] uppercase font-bold tracking-wider">Delivery Address</p>
+          <p class="text-neutral-300 mt-0.5">${address} ${landmark ? `• Landmark: ${landmark}` : ''}</p>
+        </div>
+
+        <div class="border-t border-neutral-800 pt-2">
+          <p class="text-neutral-400 text-[10px] uppercase font-bold tracking-wider mb-1">Pickles Ordered</p>
+          <div class="space-y-1">
+            ${itemsHtml}
+          </div>
+        </div>
+
+        <div class="border-t border-neutral-800 pt-2 flex justify-between items-center">
+          <span class="text-neutral-300">Payment: <strong class="text-amber-300">${paymentMode}</strong></span>
+          <span class="text-base font-black text-emerald-400 font-mono">Total: ₹${total}</span>
+        </div>
+      </div>
+
+      <!-- Accept and Decline Action Buttons -->
+      <div class="grid grid-cols-2 gap-3 pt-1">
+        
+        <!-- Accept Button -->
+        <button 
+          onclick="acceptOrder('${orderId}')"
+          class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold text-sm shadow-xl shadow-emerald-950/60 transition flex items-center justify-center gap-2 transform hover:scale-102 active:scale-98 cursor-pointer"
+        >
+          <span class="text-lg">✅</span>
+          <span>ACCEPT ORDER</span>
+        </button>
+
+        <!-- Decline Button -->
+        <button 
+          onclick="declineOrder('${orderId}')"
+          class="w-full py-3.5 px-4 rounded-2xl bg-neutral-800 hover:bg-rose-900/60 text-rose-300 hover:text-rose-100 font-extrabold text-sm border border-rose-800/60 hover:border-rose-500 transition flex items-center justify-center gap-2 transform hover:scale-102 active:scale-98 cursor-pointer"
+        >
+          <span class="text-lg">❌</span>
+          <span>DECLINE</span>
+        </button>
+
+      </div>
+
+      <p class="text-[11px] text-center text-neutral-400">
+        Kitchen Parvathapur • Amma Ruchulu Admin
+      </p>
+
     </div>
   `;
 
-  document.body.appendChild(banner);
-
-  // Auto-dismiss after 30 seconds
-  setTimeout(() => {
-    const b = document.getElementById("new-order-banner");
-    if (b) b.remove();
-  }, 30000);
+  document.body.appendChild(modal);
 }
+
+// Accept Order Action
+async function acceptOrder(orderId) {
+  const modal = document.getElementById("new-order-modal");
+  if (modal) modal.remove();
+
+  await updateOrderStatus(orderId, "processing");
+  showDashboardToast(`✅ Order #${orderId} ACCEPTED! Kitchen marked as Preparing.`, "success");
+
+  // Offer immediate dispatch
+  if (confirm(`Order #${orderId} Accepted! Would you like to open Local Dispatch (Rapido/Porter) now?`)) {
+    openLocalDispatchModal(orderId);
+  }
+}
+
+// Decline Order Action
+async function declineOrder(orderId) {
+  if (confirm(`Are you sure you want to DECLINE order #${orderId}? Status will be marked as Cancelled.`)) {
+    const modal = document.getElementById("new-order-modal");
+    if (modal) modal.remove();
+
+    await updateOrderStatus(orderId, "cancelled");
+    showDashboardToast(`❌ Order #${orderId} DECLINED and Cancelled.`, "error");
+  }
+}
+
 
 // Initialize Dashboard
 document.addEventListener("DOMContentLoaded", () => {
@@ -239,6 +373,11 @@ async function loadOrders() {
         .order("id", { ascending: false });
 
       if (!error && Array.isArray(data)) {
+        data.forEach(row => {
+          if (row.order_id) knownOrderIds.add(row.order_id);
+        });
+        isInitialLoad = false;
+
         dashboardState.orders = data.map(row => ({
           orderId: row.order_id,
           timestamp: row.timestamp ? new Date(row.timestamp).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "Recently",
@@ -574,17 +713,37 @@ function renderOrdersTable() {
 
         <!-- 7. Actions -->
         <td class="py-4 px-4 align-top text-center">
-          <div class="flex items-center justify-center gap-1.5">
+          <div class="flex items-center justify-center gap-1.5 flex-wrap">
             
-            <!-- Local Bike Dispatch Button (Porter / Rapido) -->
-            <button 
-              onclick="openLocalDispatchModal('${order.orderId}')"
-              class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-400 text-amber-300 hover:text-neutral-950 transition shadow-sm font-bold text-xs flex items-center gap-1 border border-amber-500/30"
-              title="Dispatch via Rapido / Porter / Bike Delivery"
-            >
-              <i data-lucide="bike" class="w-3.5 h-3.5"></i>
-              <span class="hidden xl:inline">Dispatch</span>
-            </button>
+            ${status === 'pending' ? `
+              <!-- Quick Accept Button -->
+              <button 
+                onclick="acceptOrder('${order.orderId}')"
+                class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-1 shadow-md transition transform hover:scale-102 cursor-pointer"
+                title="Accept this order and start preparing"
+              >
+                <span>✅ Accept</span>
+              </button>
+
+              <!-- Quick Decline Button -->
+              <button 
+                onclick="declineOrder('${order.orderId}')"
+                class="px-2 py-1.5 rounded-xl bg-neutral-800 hover:bg-rose-900/60 text-rose-300 hover:text-rose-100 font-bold text-xs flex items-center gap-1 border border-rose-800/60 transition cursor-pointer"
+                title="Decline this order"
+              >
+                <span>❌ Decline</span>
+              </button>
+            ` : `
+              <!-- Local Bike Dispatch Button (Porter / Rapido) -->
+              <button 
+                onclick="openLocalDispatchModal('${order.orderId}')"
+                class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-400 text-amber-300 hover:text-neutral-950 transition shadow-sm font-bold text-xs flex items-center gap-1 border border-amber-500/30 cursor-pointer"
+                title="Dispatch via Rapido / Porter / Bike Delivery"
+              >
+                <i data-lucide="bike" class="w-3.5 h-3.5"></i>
+                <span class="hidden xl:inline">Dispatch</span>
+              </button>
+            `}
 
             <!-- WhatsApp Customer Button -->
             <button 
