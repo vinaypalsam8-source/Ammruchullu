@@ -898,11 +898,11 @@ function closeCheckoutModal() {
   modal.classList.remove("flex");
 }
 
-// Complete Order Placement & DIRECTLY Open WhatsApp (No Popups)
+// Complete Order Placement — Save to Supabase & Show Success (No WhatsApp)
 function completeOrderPlacement(orderData) {
   closeCheckoutModal();
 
-  // Save order to store owner history and Supabase Cloud Database (background)
+  // Save order to Supabase Cloud Database (Dashboard gets real-time notification!)
   saveOrderToHistory(orderData);
 
   // Clear cart
@@ -911,22 +911,87 @@ function completeOrderPlacement(orderData) {
   updateCartUI();
   updateDirectOrderTotals();
 
-  // Generate WhatsApp message with all order details
-  const rawMessage = generateWhatsAppOrderMessage(orderData);
-  const whatsappUrl = `https://api.whatsapp.com/send?phone=${STORE_CONFIG.whatsappNumber}&text=${encodeURIComponent(rawMessage)}`;
+  showToast(`✅ Order Placed Successfully!`, "success");
 
-  showToast(`✅ Order placed! Opening WhatsApp...`, "success");
+  // Show beautiful order success confirmation on the page
+  showOrderSuccessConfirmation(orderData);
+}
 
-  // DIRECT WHATSAPP LAUNCH (Most Reliable Method):
-  // Use window.open() which browsers NEVER block when called from a click event.
-  // On mobile: opens WhatsApp app directly.
-  // On desktop: opens WhatsApp Web.
-  const opened = window.open(whatsappUrl, "_blank");
+// Show Order Success Confirmation (replaces WhatsApp redirect)
+function showOrderSuccessConfirmation(orderData) {
+  // Remove any existing success modal
+  const existing = document.getElementById("order-success-modal");
+  if (existing) existing.remove();
 
-  // Fallback: if popup was blocked (rare), redirect the page instead
-  if (!opened || opened.closed || typeof opened.closed === "undefined") {
-    window.location.href = whatsappUrl;
-  }
+  const itemsList = orderData.items.map(i => 
+    `<div class="flex justify-between text-xs py-1 border-b border-amber-100">
+      <span class="text-neutral-700">${i.name} (${i.weight}) x ${i.quantity}</span>
+      <span class="font-bold text-amber-950">₹${i.unitPrice * i.quantity}</span>
+    </div>`
+  ).join('');
+
+  const modal = document.createElement("div");
+  modal.id = "order-success-modal";
+  modal.className = "fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4";
+  modal.innerHTML = `
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center space-y-4 animate-bounce-in border-2 border-emerald-400 relative overflow-hidden">
+      
+      <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-600"></div>
+      
+      <div class="w-20 h-20 mx-auto bg-emerald-100 rounded-full flex items-center justify-center border-4 border-emerald-400 shadow-lg">
+        <span class="text-4xl">✅</span>
+      </div>
+      
+      <h2 class="text-xl sm:text-2xl font-extrabold text-emerald-800 font-cinzel">Order Placed Successfully!</h2>
+      
+      <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200 text-left space-y-2">
+        <div class="flex justify-between text-xs font-bold text-amber-900">
+          <span>🆔 Order ID</span>
+          <span class="text-emerald-700">${orderData.orderId}</span>
+        </div>
+        <div class="flex justify-between text-xs text-neutral-600">
+          <span>👤 Name</span>
+          <span class="font-bold text-neutral-800">${orderData.customer.fullName}</span>
+        </div>
+        <div class="flex justify-between text-xs text-neutral-600">
+          <span>📞 Phone</span>
+          <span class="font-bold text-neutral-800">${orderData.customer.phone}</span>
+        </div>
+        <div class="flex justify-between text-xs text-neutral-600">
+          <span>📍 Address</span>
+          <span class="font-bold text-neutral-800 text-right max-w-[200px]">${orderData.customer.streetAddress}</span>
+        </div>
+        <div class="border-t border-amber-200 pt-2 mt-2">
+          ${itemsList}
+        </div>
+        <div class="flex justify-between text-sm font-extrabold text-red-900 pt-2 border-t border-amber-300">
+          <span>💰 Total</span>
+          <span>₹${orderData.totals.grandTotal}</span>
+        </div>
+        <div class="flex justify-between text-xs text-neutral-600">
+          <span>💳 Payment</span>
+          <span class="font-bold">${orderData.status}</span>
+        </div>
+      </div>
+
+      <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-200 text-xs text-emerald-800">
+        <p class="font-bold">🔔 Our kitchen has received your order!</p>
+        <p class="text-emerald-600 mt-1">We will prepare your pickle and deliver it soon. For any queries call <a href="tel:8341643180" class="font-bold text-emerald-900 underline">8341643180</a></p>
+      </div>
+
+      <button onclick="document.getElementById('order-success-modal').remove()" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-extrabold rounded-2xl shadow-lg transition text-sm">
+        ✓ Done — Continue Shopping
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Auto-close after 30 seconds
+  setTimeout(() => {
+    const m = document.getElementById("order-success-modal");
+    if (m) m.remove();
+  }, 30000);
 }
 
 // Supabase Cloud Configuration (Active Cloud Database)

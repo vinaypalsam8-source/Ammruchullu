@@ -118,22 +118,139 @@ function updateSupabaseStatusBadge(isConnected) {
   }
 }
 
-// Real-time Cloud Subscriptions
+// Real-time Cloud Subscriptions with Sound & Visual Notifications
 function setupSupabaseRealtime() {
   if (!supabaseClient) return;
 
   try {
     supabaseClient
       .channel("public:orders")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, payload => {
-        console.log("⚡ Real-time Supabase update received:", payload);
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, payload => {
+        console.log("⚡ NEW ORDER received via Real-time:", payload);
         loadOrders();
-        showDashboardToast("⚡ Real-time Order Update received from Cloud!");
+        
+        const newOrder = payload.new;
+        const customerName = newOrder.customer_name || "New Customer";
+        const total = newOrder.grand_total || 0;
+        const orderId = newOrder.order_id || "New Order";
+
+        // 1. Play notification sound
+        playOrderSound();
+
+        // 2. Show big popup notification banner on dashboard
+        showNewOrderBanner(orderId, customerName, total, newOrder);
+
+        // 3. Blink the browser tab title
+        blinkTabTitle(`🔔 NEW ORDER — ${orderId}`);
+
+        // 4. Browser push notification (if allowed)
+        if (Notification.permission === "granted") {
+          new Notification("🔔 New Pickle Order!", {
+            body: `${customerName} ordered ₹${total} worth of pickles!\nOrder ID: ${orderId}`,
+            icon: "mango_pickle.jpg"
+          });
+        }
+
+        showDashboardToast(`🔔 NEW ORDER from ${customerName} — ₹${total}!`);
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, payload => {
+        console.log("⚡ Order UPDATED:", payload);
+        loadOrders();
+        showDashboardToast("⚡ Order status updated!");
       })
       .subscribe();
+
+    // Request browser notification permission
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
   } catch (err) {
     console.error("Realtime subscription error:", err);
   }
+}
+
+// Play notification sound when new order arrives
+function playOrderSound() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Play 3 ascending beeps
+    [0, 200, 400].forEach((delay, i) => {
+      setTimeout(() => {
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.frequency.value = 600 + (i * 200); // ascending pitch
+        oscillator.type = "sine";
+        gainNode.gain.value = 0.3;
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.15);
+      }, delay);
+    });
+  } catch (e) {
+    console.log("Audio not available:", e);
+  }
+}
+
+// Blink browser tab title for attention
+function blinkTabTitle(newTitle) {
+  const originalTitle = document.title;
+  let isOriginal = true;
+  const blinkInterval = setInterval(() => {
+    document.title = isOriginal ? newTitle : originalTitle;
+    isOriginal = !isOriginal;
+  }, 800);
+  // Stop blinking after 15 seconds
+  setTimeout(() => {
+    clearInterval(blinkInterval);
+    document.title = originalTitle;
+  }, 15000);
+}
+
+// Show big animated notification banner on dashboard
+function showNewOrderBanner(orderId, customerName, total, orderRow) {
+  const existingBanner = document.getElementById("new-order-banner");
+  if (existingBanner) existingBanner.remove();
+
+  const itemsText = Array.isArray(orderRow.items) 
+    ? orderRow.items.map(i => `${i.name} (${i.weight}) x${i.quantity}`).join(", ")
+    : "Pickle order";
+
+  const banner = document.createElement("div");
+  banner.id = "new-order-banner";
+  banner.className = "fixed top-4 left-1/2 -translate-x-1/2 z-[9999] max-w-lg w-full mx-4";
+  banner.innerHTML = `
+    <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-2xl shadow-2xl p-5 border-2 border-emerald-300 animate-pulse">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">🔔</span>
+            <span class="font-extrabold text-lg">NEW ORDER!</span>
+          </div>
+          <div class="space-y-1 text-sm">
+            <p><strong>🆔</strong> ${orderId}</p>
+            <p><strong>👤</strong> ${customerName}</p>
+            <p><strong>📦</strong> ${itemsText}</p>
+            <p><strong>💰</strong> ₹${total}</p>
+            <p><strong>💳</strong> ${orderRow.payment_mode || "COD"}</p>
+            <p><strong>📍</strong> ${orderRow.street_address || "Hyderabad"}</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('new-order-banner').remove()" class="p-2 hover:bg-white/20 rounded-xl transition text-white/80 hover:text-white">
+          ✕
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(banner);
+
+  // Auto-dismiss after 30 seconds
+  setTimeout(() => {
+    const b = document.getElementById("new-order-banner");
+    if (b) b.remove();
+  }, 30000);
 }
 
 // Initialize Dashboard
