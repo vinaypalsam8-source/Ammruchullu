@@ -1251,6 +1251,7 @@ async function sendOrderEmailNotification(orderData) {
     const data = await response.json();
     if (data.success === "true" || data.success === true) {
       console.log("📧 Order notification email successfully dispatched to", emailTarget);
+      showToast("📧 Order details sent to " + emailTarget, "info");
     } else {
       console.log("📧 Email notification response:", data);
     }
