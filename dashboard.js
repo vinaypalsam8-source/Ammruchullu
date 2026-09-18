@@ -216,6 +216,40 @@ function formatOrderRow(row) {
     ? new Date(row.timestamp).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) 
     : (row.created_at ? new Date(row.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "Recently");
 
+  // Extract delivery zone & courier partner from metadata or infer from fee
+  let deliveryZone = row.delivery_zone || "";
+  let deliveryPartner = row.delivery_partner || "";
+  const addressStr = String(row.street_address || "");
+  const zoneMatch = addressStr.match(/\[Zone:\s*([^\]]+)\]/i);
+  if (zoneMatch) {
+    deliveryZone = zoneMatch[1].trim();
+  }
+
+  const feeNum = Number(row.delivery_fee) || 0;
+  if (!deliveryZone) {
+    if (feeNum === 25) {
+      deliveryZone = "0 - 3 km (Local)";
+      deliveryPartner = "Rapido Bike / Rider";
+    } else if (feeNum === 45) {
+      deliveryZone = "3 - 7 km (Near)";
+      deliveryPartner = "Rapido / Uber Parcel";
+    } else if (feeNum === 75) {
+      deliveryZone = "7 - 15 km (Mid-City)";
+      deliveryPartner = "Rapido / Porter";
+    } else if (feeNum === 110) {
+      deliveryZone = "15 - 25 km (Greater Hyd)";
+      deliveryPartner = "Porter / Rapido";
+    } else if (feeNum === 60) {
+      deliveryZone = "25+ km (Pan-India)";
+      deliveryPartner = "Shiprocket Courier";
+    } else {
+      deliveryZone = "Local Parvathapur";
+      deliveryPartner = "Kitchen Rider";
+    }
+  }
+
+  const cleanStreetAddress = addressStr.replace(/\[Zone:\s*[^\]]+\]/gi, "").trim();
+
   return {
     orderId: row.order_id || `AR-${row.id || Date.now()}`,
     timestamp: timeStr,
@@ -224,9 +258,12 @@ function formatOrderRow(row) {
       fullName: row.customer_name || "Customer",
       phone: phoneStr || "N/A",
       email: row.email || "",
-      streetAddress: row.street_address || "Hyderabad",
+      streetAddress: cleanStreetAddress || "Hyderabad",
+      rawAddress: addressStr,
       landmark: row.landmark || "",
       pincode: row.pincode || "500098",
+      deliveryZone: deliveryZone,
+      deliveryPartner: deliveryPartner,
       utr: row.utr || "N/A"
     },
     items: items,
@@ -805,10 +842,14 @@ function renderOrdersTable() {
           </a>
         </td>
 
-        <!-- 3. Delivery Address -->
+        <!-- 3. Delivery Address & Distance Zone -->
         <td class="py-4 px-4 align-top max-w-xs">
           <p class="text-xs text-neutral-300 leading-snug line-clamp-2">${order.customer.streetAddress}</p>
-          <span class="text-[10px] text-neutral-500 block mt-0.5">${order.customer.landmark || "Parvathapur"} • ${order.customer.pincode || "500098"}</span>
+          <span class="text-[10px] text-neutral-500 block mt-0.5">${order.customer.landmark || "Parvathapur"} • PIN: ${order.customer.pincode || "500098"}</span>
+          <span class="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            🛵 ${order.customer.deliveryZone || 'Local Parvathapur'} • ${order.totals.deliveryFee === 0 ? '<span class="text-emerald-400 font-bold">FREE</span>' : '₹' + order.totals.deliveryFee}
+          </span>
+          ${order.customer.deliveryPartner ? `<span class="block text-[9px] text-neutral-400 mt-0.5 font-medium">via ${order.customer.deliveryPartner}</span>` : ''}
         </td>
 
         <!-- 4. Pickles Ordered -->
@@ -821,6 +862,7 @@ function renderOrdersTable() {
         <!-- 5. Bill & Payment -->
         <td class="py-4 px-4 align-top">
           <span class="text-sm font-black text-amber-300 font-mono block">₹${order.totals.grandTotal}</span>
+          <span class="text-[10px] text-neutral-400 block font-mono">Items: ₹${order.totals.subtotal} | Del: ${order.totals.deliveryFee === 0 ? '<span class="text-emerald-400 font-bold">FREE</span>' : '₹' + order.totals.deliveryFee}</span>
           <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mt-1 ${paymentBadgeClasses[paymentMode] || 'bg-neutral-800 text-neutral-300'}">
             ${paymentMode.toUpperCase()}
           </span>
@@ -994,6 +1036,9 @@ function openKitchenSlipModal(orderId) {
         <p class="font-semibold text-neutral-800">${order.customer.fullName} (📞 ${order.customer.phone})</p>
         <p class="text-neutral-600 text-[11px] leading-snug">${order.customer.streetAddress}</p>
         <p class="text-neutral-500 text-[10px]">${order.customer.landmark || "Parvathapur"} • Pincode: ${order.customer.pincode || "500098"}</p>
+        <div class="mt-1 px-2 py-1 bg-amber-100 rounded-lg text-[10px] font-bold text-amber-900 border border-amber-200 inline-block">
+          🛵 Zone: ${order.customer.deliveryZone || 'Local Parvathapur'} • Partner: ${order.customer.deliveryPartner || 'Kitchen Rider'}
+        </div>
       </div>
 
       <table class="w-full text-xs">
@@ -1022,8 +1067,8 @@ function openKitchenSlipModal(orderId) {
           </div>
         ` : ''}
         <div class="flex justify-between text-neutral-600">
-          <span>Home Delivery</span>
-          <span>${order.totals.deliveryFee === 0 ? 'FREE' : '₹' + order.totals.deliveryFee}</span>
+          <span>Home Delivery (${order.customer.deliveryZone || 'Standard'})</span>
+          <span>${order.totals.deliveryFee === 0 ? '<strong class="text-emerald-700">FREE</strong>' : '₹' + order.totals.deliveryFee}</span>
         </div>
         <div class="flex justify-between text-sm font-extrabold text-red-900 border-t border-neutral-300 pt-1.5">
           <span>Total Payable</span>

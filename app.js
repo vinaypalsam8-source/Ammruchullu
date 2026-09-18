@@ -9,8 +9,103 @@ const STORE_CONFIG = {
   whatsappNumber: "918341643180",
   upiId: "8341643180@kotakbank",
   address: "Sai Aishwarya Colony, Road No 1, Near Mediplus, Parvathapur, Hyderabad - 500098",
-  freeDeliveryThreshold: 500,
-  defaultDeliveryFee: 40
+  freeDeliveryThreshold: 499,
+  defaultDeliveryFee: 25
+};
+
+// KM-Based Delivery Zones Benchmarked against Rapido, Uber Parcel, Porter & Shiprocket
+// Kitchen Base: Sai Aishwarya Colony, Parvathapur, Hyderabad - 500098
+const DELIVERY_ZONES = {
+  "zone-local": {
+    id: "zone-local",
+    shortName: "0 - 3 km",
+    title: "Zone 1: Local Parvathapur (0 - 3 km)",
+    areas: "Parvathapur, Peerzadiguda, Medipally, Narapally",
+    fee: 25,
+    freeAbove: 499,
+    estTime: "30 - 45 mins",
+    partner: "Rapido Bike / Kitchen Rider",
+    benchmark: {
+      rapido: 35,
+      uber: 42,
+      porter: 55,
+      shiprocket: 65,
+      savings: 30
+    },
+    pincodes: ["500098", "500039"]
+  },
+  "zone-near": {
+    id: "zone-near",
+    shortName: "3 - 7 km",
+    title: "Zone 2: Near Suburbs (3 - 7 km)",
+    areas: "Uppal, Boduppal, Ramanthapur, Habsiguda, Nacharam, Chengicherla",
+    fee: 45,
+    freeAbove: 799,
+    estTime: "45 - 60 mins",
+    partner: "Rapido Parcel / Uber Parcel",
+    benchmark: {
+      rapido: 55,
+      uber: 65,
+      porter: 75,
+      shiprocket: 70,
+      savings: 30
+    },
+    pincodes: ["500007", "500076", "500013", "500068", "500092"]
+  },
+  "zone-mid": {
+    id: "zone-mid",
+    shortName: "7 - 15 km",
+    title: "Zone 3: Central & East Hyd (7 - 15 km)",
+    areas: "Secunderabad, Tarnaka, LB Nagar, Dilsukhnagar, Malakpet, Koti",
+    fee: 75,
+    freeAbove: 999,
+    estTime: "60 - 90 mins",
+    partner: "Rapido Parcel / Porter 2-Wheeler",
+    benchmark: {
+      rapido: 95,
+      uber: 110,
+      porter: 125,
+      shiprocket: 80,
+      savings: 50
+    },
+    pincodes: ["500074", "500035", "500060", "500003", "500025", "500020", "500027", "500024", "500036", "500001", "500002", "500004", "500009", "500012", "500014", "500015", "500017", "500026", "500029", "500044", "500061"]
+  },
+  "zone-greater": {
+    id: "zone-greater",
+    shortName: "15 - 25 km",
+    title: "Zone 4: Greater Hyderabad / IT Corridor (15 - 25 km)",
+    areas: "Hitec City, Gachibowli, Madhapur, Kukatpally, Banjara Hills, Jubilee Hills",
+    fee: 110,
+    freeAbove: 1499,
+    estTime: "90 - 120 mins",
+    partner: "Porter / Rapido Parcel",
+    benchmark: {
+      rapido: 140,
+      uber: 165,
+      porter: 180,
+      shiprocket: 95,
+      savings: 70
+    },
+    pincodes: ["500081", "500084", "500032", "500072", "500049", "500033", "500034", "500090", "500018", "500045", "500085", "500089", "500075", "500019", "500050", "500079", "500080", "500082"]
+  },
+  "zone-pan-india": {
+    id: "zone-pan-india",
+    shortName: "Pan-India",
+    title: "Zone 5: Pan-India Doorstep Courier (25+ km)",
+    areas: "Rest of Telangana, Andhra Pradesh & All India (Bluedart / Delhivery)",
+    fee: 60,
+    freeAbove: 999,
+    estTime: "2 - 4 Days Express Courier",
+    partner: "Shiprocket (Air / Surface Express)",
+    benchmark: {
+      rapido: 0,
+      uber: 0,
+      porter: 0,
+      shiprocket: 90,
+      savings: 30
+    },
+    pincodes: []
+  }
 };
 
 // 8 Signature Products with 250g, 500g, 1kg prices and photos
@@ -185,6 +280,7 @@ let state = {
   cart: [],
   discountCode: "",
   discountPercent: 0,
+  selectedDeliveryZone: "zone-local",
   currentOrder: null
 };
 
@@ -378,8 +474,9 @@ function calculateTotals() {
   const discountAmount = Math.round(subtotal * (state.discountPercent / 100));
   const afterDiscount = subtotal - discountAmount;
   
-  let deliveryFee = STORE_CONFIG.defaultDeliveryFee;
-  if (subtotal >= STORE_CONFIG.freeDeliveryThreshold || subtotal === 0) {
+  const zone = DELIVERY_ZONES[state.selectedDeliveryZone] || DELIVERY_ZONES["zone-local"];
+  let deliveryFee = zone.fee;
+  if (subtotal >= zone.freeAbove || subtotal === 0) {
     deliveryFee = 0;
   }
 
@@ -391,6 +488,7 @@ function calculateTotals() {
     afterDiscount,
     deliveryFee,
     grandTotal,
+    zone,
     totalItems: state.cart.reduce((sum, item) => sum + item.quantity, 0)
   };
 }
@@ -477,22 +575,27 @@ function updateCartUI() {
   }
 
   if (freeShipBar && freeShipText) {
-    const diff = STORE_CONFIG.freeDeliveryThreshold - totals.subtotal;
+    const threshold = totals.zone ? totals.zone.freeAbove : STORE_CONFIG.freeDeliveryThreshold;
+    const diff = threshold - totals.subtotal;
     if (totals.subtotal === 0) {
       freeShipBar.style.width = "0%";
-      freeShipText.textContent = `Add items worth ₹${STORE_CONFIG.freeDeliveryThreshold} for FREE Delivery! 🚚`;
+      freeShipText.textContent = `Add items worth ₹${threshold} for FREE Delivery (${totals.zone.shortName})! 🚚`;
     } else if (diff <= 0) {
       freeShipBar.style.width = "100%";
-      freeShipText.innerHTML = `<span class="text-emerald-700 font-bold">🎉 Congratulations! You unlocked FREE Delivery!</span>`;
+      freeShipText.innerHTML = `<span class="text-emerald-700 font-bold">🎉 Congratulations! FREE Delivery Unlocked for ${totals.zone.shortName}!</span>`;
     } else {
-      const percentage = Math.min(100, Math.round((totals.subtotal / STORE_CONFIG.freeDeliveryThreshold) * 100));
+      const percentage = Math.min(100, Math.round((totals.subtotal / threshold) * 100));
       freeShipBar.style.width = `${percentage}%`;
-      freeShipText.textContent = `Add ₹${diff} more for FREE Home Delivery! 🚚`;
+      freeShipText.textContent = `Add ₹${diff} more for FREE Delivery to ${totals.zone.shortName}! 🚚`;
     }
   }
 
   if (drawerSubtotal) drawerSubtotal.textContent = `₹${totals.subtotal}`;
-  if (drawerDelivery) drawerDelivery.textContent = totals.deliveryFee === 0 ? "FREE" : `₹${totals.deliveryFee}`;
+  if (drawerDelivery) {
+    drawerDelivery.innerHTML = totals.deliveryFee === 0 
+      ? '<span class="text-emerald-700 font-bold">FREE</span>' 
+      : `₹${totals.deliveryFee} <span class="text-[10px] text-neutral-500 font-normal">(${totals.zone.shortName})</span>`;
+  }
   
   if (drawerDiscountRow && drawerDiscountVal) {
     if (totals.discountAmount > 0) {
@@ -541,11 +644,23 @@ function updateDirectOrderTotals() {
   const gpayBtn = document.getElementById("direct-gpay-btn");
   const phonepeBtn = document.getElementById("direct-phonepe-btn");
   const paytmBtn = document.getElementById("direct-paytm-btn");
+  const directDeliveryDisplay = document.getElementById("direct-delivery-fee-display");
+  const directDeliveryLabel = document.getElementById("direct-delivery-fee-label");
 
   const totals = calculateTotals();
 
   if (totalDisplay) {
     totalDisplay.textContent = `₹${totals.grandTotal}`;
+  }
+
+  if (directDeliveryDisplay) {
+    directDeliveryDisplay.innerHTML = totals.deliveryFee === 0 
+      ? '<span class="text-emerald-400 font-bold">FREE</span>' 
+      : `₹${totals.deliveryFee} <span class="text-[10px] text-amber-200">(${totals.zone.shortName})</span>`;
+  }
+
+  if (directDeliveryLabel) {
+    directDeliveryLabel.textContent = `Delivery (${totals.zone.shortName} via ${totals.zone.partner}):`;
   }
 
   if (itemsDisplay) {
@@ -596,6 +711,162 @@ function updateDirectOrderTotals() {
   if (window.lucide) {
     window.lucide.createIcons();
   }
+}
+
+// Render Market Courier & Parcel Comparison HTML
+function renderMarketComparisonHtml(zone, isDirectForm = true) {
+  const isLocal = zone.id !== "zone-pan-india";
+  const bgClass = isDirectForm ? "bg-black/25 border-white/20 text-white" : "bg-amber-50 border-amber-300 text-neutral-900";
+  const labelClass = isDirectForm ? "text-amber-200" : "text-amber-900";
+  const brandBadge = isDirectForm ? "bg-white/15 text-neutral-100 border border-white/20" : "bg-white text-neutral-700 border border-neutral-300";
+
+  let competitors = "";
+  if (isLocal) {
+    competitors = `
+      <div class="flex items-center gap-2 flex-wrap font-semibold text-[11px] my-1.5">
+        <span class="px-2 py-1 rounded-lg ${brandBadge}">🛵 Rapido: <del class="opacity-70 font-normal">₹${zone.benchmark.rapido}</del></span>
+        <span class="px-2 py-1 rounded-lg ${brandBadge}">🚗 Uber Parcel: <del class="opacity-70 font-normal">₹${zone.benchmark.uber}</del></span>
+        <span class="px-2 py-1 rounded-lg ${brandBadge}">🚛 Porter: <del class="opacity-70 font-normal">₹${zone.benchmark.porter}</del></span>
+      </div>
+    `;
+  } else {
+    competitors = `
+      <div class="flex items-center gap-2 flex-wrap font-semibold text-[11px] my-1.5">
+        <span class="px-2 py-1 rounded-lg ${brandBadge}">📦 Shiprocket Courier: <del class="opacity-70 font-normal">₹${zone.benchmark.shiprocket}</del></span>
+        <span class="px-2 py-1 rounded-lg ${brandBadge}">📮 Speed Post: <del class="opacity-70 font-normal">₹75</del></span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="rounded-xl p-3 border ${bgClass} text-xs shadow-inner space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-bold flex items-center gap-1.5 ${labelClass}">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+          Market Courier & App Rate Comparison:
+        </span>
+        <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded font-black text-[10px]">
+          SAVE UP TO ₹${zone.benchmark.savings}
+        </span>
+      </div>
+      ${competitors}
+      <div class="flex items-center justify-between text-[11px] pt-1.5 border-t ${isDirectForm ? 'border-white/15' : 'border-amber-200'}">
+        <span>⚡ <strong>Amma Ruchulu Direct Kitchen Rate:</strong> <span class="font-bold text-amber-300">₹${zone.fee}</span> (or <span class="text-emerald-400 font-bold">FREE</span> above ₹${zone.freeAbove})</span>
+        <span class="text-[10px] opacity-80 font-medium">${zone.estTime}</span>
+      </div>
+    </div>
+  `;
+}
+
+// Update Comparison Cards across forms
+function updateMarketComparisonCards() {
+  const zone = DELIVERY_ZONES[state.selectedDeliveryZone] || DELIVERY_ZONES["zone-local"];
+
+  const directCard = document.getElementById("direct-market-comparison");
+  if (directCard) {
+    directCard.innerHTML = renderMarketComparisonHtml(zone, true);
+  }
+
+  const modalCard = document.getElementById("modal-market-comparison");
+  if (modalCard) {
+    modalCard.innerHTML = renderMarketComparisonHtml(zone, false);
+  }
+
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+}
+
+// Detect Zone from Pincode
+function detectZoneFromPincode(pincode) {
+  const pin = String(pincode || "").trim();
+  if (pin.length < 5) return null;
+
+  for (const [zoneId, zone] of Object.entries(DELIVERY_ZONES)) {
+    if (zone.pincodes.includes(pin)) {
+      return zoneId;
+    }
+  }
+
+  if (pin.startsWith("500")) {
+    return "zone-mid";
+  }
+
+  return "zone-pan-india";
+}
+
+// Set active delivery zone and sync all UI
+function setDeliveryZone(zoneId, source) {
+  if (!DELIVERY_ZONES[zoneId]) zoneId = "zone-local";
+  state.selectedDeliveryZone = zoneId;
+
+  // Sync inputs
+  const directSelect = document.getElementById("direct-delivery-zone");
+  if (directSelect && directSelect.value !== zoneId) directSelect.value = zoneId;
+
+  const modalSelect = document.getElementById("modal-delivery-zone");
+  if (modalSelect && modalSelect.value !== zoneId) modalSelect.value = zoneId;
+
+  const drawerSelect = document.getElementById("drawer-delivery-zone");
+  if (drawerSelect && drawerSelect.value !== zoneId) drawerSelect.value = zoneId;
+
+  updateMarketComparisonCards();
+  updateCartUI();
+  updateDirectOrderTotals();
+}
+
+// Handle Pincode input typing
+function handlePincodeChange(val, source) {
+  const pinClean = String(val || "").replace(/[^0-9]/g, "").slice(0, 6);
+  if (source === "direct") {
+    const pinInput = document.getElementById("direct-cust-pincode");
+    if (pinInput && pinInput.value !== pinClean) pinInput.value = pinClean;
+  } else if (source === "modal") {
+    const pinInput = document.getElementById("cust-pincode");
+    if (pinInput && pinInput.value !== pinClean) pinInput.value = pinClean;
+  }
+
+  if (pinClean.length >= 6) {
+    const detected = detectZoneFromPincode(pinClean);
+    if (detected) {
+      setDeliveryZone(detected, source);
+      const hint = source === "direct" ? document.getElementById("direct-pincode-hint") : document.getElementById("modal-pincode-hint");
+      if (hint) {
+        const z = DELIVERY_ZONES[detected];
+        hint.innerHTML = `✅ <span class="text-emerald-300 font-bold">${z.title}</span> auto-detected (${z.fee === 0 ? 'FREE' : '₹' + z.fee})`;
+      }
+    }
+  }
+}
+
+// Handle Zone select dropdown change
+function handleZoneSelect(zoneId, source) {
+  setDeliveryZone(zoneId, source);
+  const hint = source === "direct" ? document.getElementById("direct-pincode-hint") : document.getElementById("modal-pincode-hint");
+  if (hint) {
+    const z = DELIVERY_ZONES[zoneId];
+    hint.innerHTML = `📍 Selected: <strong class="text-white">${z.shortName}</strong> (${z.areas.split(',')[0]}...)`;
+  }
+}
+
+// Populate Delivery Zone Dropdowns
+function initDeliveryZoneSelectors() {
+  const selects = [
+    document.getElementById("direct-delivery-zone"),
+    document.getElementById("modal-delivery-zone"),
+    document.getElementById("drawer-delivery-zone")
+  ];
+
+  selects.forEach(selectElem => {
+    if (!selectElem) return;
+    selectElem.innerHTML = Object.values(DELIVERY_ZONES).map(z => `
+      <option value="${z.id}" ${z.id === state.selectedDeliveryZone ? 'selected' : ''}>
+        ${z.title} • ₹${z.fee} (FREE > ₹${z.freeAbove})
+      </option>
+    `).join('');
+  });
+
+  updateMarketComparisonCards();
 }
 
 // Category Tabs & Event Listeners
@@ -676,6 +947,9 @@ function setupEventListeners() {
   if (checkoutForm) {
     checkoutForm.addEventListener("submit", handleModalCheckoutSubmit);
   }
+
+  // Initialize Delivery Zones & Comparison Widgets
+  initDeliveryZoneSelectors();
 }
 
 // Filter product cards based on category
@@ -708,6 +982,8 @@ function handleDirectOrderSubmit(e) {
   const phone = document.getElementById("direct-cust-phone").value.trim();
   const address = document.getElementById("direct-cust-address").value.trim();
   const landmark = document.getElementById("direct-cust-landmark") ? document.getElementById("direct-cust-landmark").value.trim() : "";
+  const pincodeInput = document.getElementById("direct-cust-pincode");
+  const pincode = pincodeInput ? pincodeInput.value.trim() : "500098";
   const utr = document.getElementById("direct-cust-utr") ? document.getElementById("direct-cust-utr").value.trim() : "";
 
   const paymentRadio = document.querySelector("input[name='directPaymentMode']:checked");
@@ -739,7 +1015,9 @@ function handleDirectOrderSubmit(e) {
       email: "Direct Order",
       streetAddress: address,
       landmark: landmark || "Parvathapur, Hyderabad",
-      pincode: "500098",
+      pincode: pincode || "500098",
+      deliveryZone: totals.zone.title,
+      deliveryPartner: totals.zone.partner,
       utr: utr || "N/A"
     },
     items: [...state.cart],
@@ -765,7 +1043,7 @@ function handleModalCheckoutSubmit(e) {
   const email = document.getElementById("cust-email").value.trim();
   const streetAddress = document.getElementById("cust-address").value.trim();
   const landmark = document.getElementById("cust-landmark").value.trim();
-  const pincode = document.getElementById("cust-pincode").value.trim();
+  const pincode = document.getElementById("cust-pincode").value.trim() || "500098";
   
   const paymentModeInput = document.querySelector("input[name='paymentMode']:checked");
   const paymentMode = paymentModeInput ? paymentModeInput.value : "cod";
@@ -797,6 +1075,8 @@ function handleModalCheckoutSubmit(e) {
       streetAddress,
       landmark: landmark || "N/A",
       pincode: pincode || "500098",
+      deliveryZone: totals.zone.title,
+      deliveryPartner: totals.zone.partner,
       utr: "N/A"
     },
     items: [...state.cart],
@@ -843,8 +1123,8 @@ function openCheckoutModal() {
           </div>
         ` : ''}
         <div class="flex justify-between text-neutral-600">
-          <span>Delivery (Parvathapur & India)</span>
-          <span class="font-semibold">${totals.deliveryFee === 0 ? '<span class="text-emerald-700">FREE</span>' : '₹' + totals.deliveryFee}</span>
+          <span>Delivery (${totals.zone.shortName} via ${totals.zone.partner})</span>
+          <span class="font-semibold">${totals.deliveryFee === 0 ? '<span class="text-emerald-700 font-bold">FREE</span>' : '₹' + totals.deliveryFee}</span>
         </div>
         <div class="flex justify-between text-sm font-extrabold text-red-900 border-t border-amber-200 pt-1.5">
           <span>Total Payable</span>
@@ -876,6 +1156,12 @@ function openCheckoutModal() {
   if (modalGpay) modalGpay.href = gpayUrl;
   if (modalPhonepe) modalPhonepe.href = phonepeUrl;
   if (modalPaytm) modalPaytm.href = paytmUrl;
+
+  const modalSelect = document.getElementById("modal-delivery-zone");
+  if (modalSelect && modalSelect.value !== state.selectedDeliveryZone) {
+    modalSelect.value = state.selectedDeliveryZone;
+  }
+  updateMarketComparisonCards();
 
   modal.classList.remove("hidden");
   modal.classList.add("flex");
@@ -1033,7 +1319,7 @@ async function saveOrderToHistory(orderData) {
           customer_name: orderData.customer.fullName,
           phone: orderData.customer.phone,
           email: orderData.customer.email || "",
-          street_address: orderData.customer.streetAddress,
+          street_address: `${orderData.customer.streetAddress}${orderData.customer.deliveryZone ? ` [Zone: ${orderData.customer.deliveryZone}]` : ''}`,
           landmark: orderData.customer.landmark || "",
           pincode: orderData.customer.pincode || "",
           items: orderData.items,
@@ -1066,6 +1352,7 @@ function generateWhatsAppOrderMessage(orderData) {
   ).join("\n");
 
   const utrInfo = orderData.customer.utr && orderData.customer.utr !== "N/A" ? `\n• *UPI UTR / Ref:* ${orderData.customer.utr}` : "";
+  const zoneInfo = orderData.customer.deliveryZone ? `\n• *Distance Zone:* ${orderData.customer.deliveryZone}\n• *Courier Partner:* ${orderData.customer.deliveryPartner || "Rapido / Kitchen Rider"}` : "";
 
   return `🌶️ *NEW ORDER - AMMA RUCHULU (అమ్మ రుచులు)* 🌶️
 ━━━━━━━━━━━━━━━━━━
@@ -1076,15 +1363,15 @@ function generateWhatsAppOrderMessage(orderData) {
 • *Name:* ${orderData.customer.fullName}
 • *Mobile / WhatsApp:* ${orderData.customer.phone}
 • *Delivery Address:* ${orderData.customer.streetAddress}
-• *Landmark / City:* ${orderData.customer.landmark} - ${orderData.customer.pincode}
+• *Landmark / City:* ${orderData.customer.landmark} - ${orderData.customer.pincode}${zoneInfo}
 
 📦 *ORDERED PICKLES:*
 ${itemsText}
 
-💰 *PAYMENT DETAILS:*
+💰 *PAYMENT & BILLING:*
 • *Subtotal:* ₹${orderData.totals.subtotal}
 • *Discount (Coupon):* -₹${orderData.totals.discountAmount}
-• *Home Delivery:* ${orderData.totals.deliveryFee === 0 ? "FREE" : "₹" + orderData.totals.deliveryFee}
+• *Delivery Fee (${orderData.totals.zone?.shortName || "Local"}):* ${orderData.totals.deliveryFee === 0 ? "FREE" : "₹" + orderData.totals.deliveryFee}
 • *TOTAL PAYABLE:* *₹${orderData.totals.grandTotal}*
 • *Payment Mode:* *${orderData.paymentMode.toUpperCase()}*
 • *Payment Status:* ${orderData.status}${utrInfo}
