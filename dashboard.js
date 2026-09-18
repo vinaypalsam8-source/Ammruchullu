@@ -255,19 +255,28 @@ function handleNewIncomingOrder(newOrder) {
   if (shownModalOrderIds.has(orderId)) return;
   shownModalOrderIds.add(orderId);
 
+  // 1. Immediately insert order into state so it is visible in the table
+  const formatted = formatOrderRow(newOrder);
+  const exists = dashboardState.orders.some(o => o.orderId === formatted.orderId);
+  if (!exists) {
+    dashboardState.orders.unshift(formatted);
+    saveOrdersToStorage();
+    renderDashboard();
+  }
+
   const customerName = newOrder.customer_name || "Customer";
   const total = Number(newOrder.grand_total) || 0;
 
-  // 1. Play chime sound
+  // 2. Play chime sound
   playOrderSound();
 
-  // 2. Show interactive Accept / Decline Modal
+  // 3. Show interactive Accept / Decline Modal
   showNewOrderModal(orderId, customerName, total, newOrder);
 
-  // 3. Blink tab title
+  // 4. Blink tab title
   blinkTabTitle(`🔔 NEW ORDER — ${orderId}`);
 
-  // 4. Browser push notification
+  // 5. Browser push notification
   if ("Notification" in window && Notification.permission === "granted") {
     try {
       new Notification("🔔 New Pickle Order Received!", {
@@ -435,22 +444,42 @@ function showNewOrderModal(orderId, customerName, total, orderRow) {
   document.body.appendChild(modal);
 }
 
-// Accept Order Action (Immediate, 100% Reliable, No annoying prompt blockers)
+// Accept Order Action (Immediate, 100% Reliable, Stays Visible in Table)
 async function acceptOrder(orderId) {
   const modal = document.getElementById("new-order-modal");
   if (modal) modal.remove();
 
-  // 1. Immediately update UI state
-  const order = dashboardState.orders.find(o => o.orderId === orderId);
+  // 1. Find order in memory or reload from cloud
+  let order = dashboardState.orders.find(o => o.orderId === orderId);
+  if (!order) {
+    await loadOrders(false);
+    order = dashboardState.orders.find(o => o.orderId === orderId);
+  }
+
   if (order) {
     order.orderStatus = "processing";
     saveOrdersToStorage();
-    renderDashboard();
   }
 
-  showDashboardToast(`✅ Order #${orderId} ACCEPTED! Marked as Preparing.`, "success");
+  // 2. ALWAYS switch filter to "all" so the accepted order NEVER disappears from view!
+  setStatusFilter("all");
+  renderDashboard();
 
-  // 2. Sync to Supabase Cloud
+  showDashboardToast(`✅ Order #${orderId} ACCEPTED! Moved to Accepted (Preparing).`, "success");
+
+  // 3. Highlight the accepted order row with a green pulse
+  setTimeout(() => {
+    const row = document.getElementById(`order-row-${orderId}`);
+    if (row) {
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      row.classList.add("bg-emerald-950/70", "ring-2", "ring-emerald-400");
+      setTimeout(() => {
+        row.classList.remove("bg-emerald-950/70", "ring-2", "ring-emerald-400");
+      }, 4000);
+    }
+  }, 150);
+
+  // 4. Sync to Supabase Cloud
   await updateOrderStatusInCloud(orderId, "processing");
 }
 
@@ -459,17 +488,24 @@ async function declineOrder(orderId) {
   const modal = document.getElementById("new-order-modal");
   if (modal) modal.remove();
 
-  // 1. Immediately update UI state
-  const order = dashboardState.orders.find(o => o.orderId === orderId);
+  let order = dashboardState.orders.find(o => o.orderId === orderId);
+  if (!order) {
+    await loadOrders(false);
+    order = dashboardState.orders.find(o => o.orderId === orderId);
+  }
+
   if (order) {
     order.orderStatus = "cancelled";
     saveOrdersToStorage();
-    renderDashboard();
   }
+
+  // Keep view on "all" so user can see it updated to Cancelled
+  setStatusFilter("all");
+  renderDashboard();
 
   showDashboardToast(`❌ Order #${orderId} DECLINED.`, "error");
 
-  // 2. Sync to Supabase Cloud
+  // Sync to Supabase Cloud
   await updateOrderStatusInCloud(orderId, "cancelled");
 }
 
@@ -753,7 +789,7 @@ function renderOrdersTable() {
     `).join("");
 
     return `
-      <tr class="hover:bg-neutral-900/60 transition duration-150">
+      <tr class="hover:bg-neutral-900/60 transition duration-150" id="order-row-${order.orderId}">
         
         <!-- 1. Order ID & Date -->
         <td class="py-4 px-4 align-top">
@@ -798,9 +834,9 @@ function renderOrdersTable() {
             class="px-2.5 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer bg-neutral-900 ${statusBadgeClasses[status] || statusBadgeClasses.pending}"
           >
             <option value="pending" ${status === 'pending' ? 'selected' : ''} class="bg-neutral-900 text-amber-300">⏳ Pending</option>
-            <option value="processing" ${status === 'processing' ? 'selected' : ''} class="bg-neutral-900 text-sky-300">🍳 Preparing</option>
-            <option value="completed" ${status === 'completed' ? 'selected' : ''} class="bg-neutral-900 text-emerald-300">✅ Completed</option>
-            <option value="cancelled" ${status === 'cancelled' ? 'selected' : ''} class="bg-neutral-900 text-rose-300">❌ Cancelled</option>
+            <option value="processing" ${status === 'processing' ? 'selected' : ''} class="bg-neutral-900 text-emerald-300 font-bold">✅ Accepted (Preparing)</option>
+            <option value="completed" ${status === 'completed' ? 'selected' : ''} class="bg-neutral-900 text-emerald-400">🎉 Delivered</option>
+            <option value="cancelled" ${status === 'cancelled' ? 'selected' : ''} class="bg-neutral-900 text-rose-400">❌ Cancelled</option>
           </select>
         </td>
 
