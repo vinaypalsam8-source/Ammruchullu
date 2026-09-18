@@ -7,6 +7,7 @@ const STORE_CONFIG = {
   name: "Amma Ruchulu (అమ్మ రుచులు)",
   phone: "8341643180",
   whatsappNumber: "918341643180",
+  notificationEmail: "vinaypalsam8@gmail.com",
   upiId: "8341643180@kotakbank",
   address: "Sai Aishwarya Colony, Road No 1, Near Mediplus, Parvathapur, Hyderabad - 500098",
   freeDeliveryThreshold: 499,
@@ -1184,12 +1185,15 @@ function closeCheckoutModal() {
   modal.classList.remove("flex");
 }
 
-// Complete Order Placement — Save to Supabase & Show Success (No WhatsApp)
+// Complete Order Placement — Save to Supabase, Send Email & Show Success
 function completeOrderPlacement(orderData) {
   closeCheckoutModal();
 
-  // Save order to Supabase Cloud Database (Dashboard gets real-time notification!)
+  // 1. Save order to Supabase Cloud Database (Dashboard gets real-time notification!)
   saveOrderToHistory(orderData);
+
+  // 2. Automatically dispatch full order details directly to email (vinaypalsam8@gmail.com)
+  sendOrderEmailNotification(orderData);
 
   // Clear cart
   state.cart = [];
@@ -1201,6 +1205,58 @@ function completeOrderPlacement(orderData) {
 
   // Show beautiful order success confirmation on the page
   showOrderSuccessConfirmation(orderData);
+}
+
+// Automatically send complete order notification directly to store owner email (vinaypalsam8@gmail.com)
+async function sendOrderEmailNotification(orderData) {
+  const emailTarget = STORE_CONFIG.notificationEmail || "vinaypalsam8@gmail.com";
+
+  const itemsList = orderData.items.map((i, idx) => 
+    `${idx + 1}. ${i.name} (${i.weight}) x ${i.quantity} = ₹${i.unitPrice * i.quantity}`
+  ).join("\n");
+
+  const emailPayload = {
+    "_subject": `🌶️ New Order Received: ${orderData.orderId} - ₹${orderData.totals.grandTotal} (Amma Ruchulu)`,
+    "_template": "table",
+    "_captcha": "false",
+    "Order ID": orderData.orderId,
+    "Date & Time": orderData.timestamp,
+    "Customer Name": orderData.customer.fullName,
+    "Customer Mobile / WhatsApp": orderData.customer.phone,
+    "Delivery Address": orderData.customer.streetAddress,
+    "Landmark": orderData.customer.landmark || "N/A",
+    "Pincode": orderData.customer.pincode || "500098",
+    "Distance Zone": orderData.customer.deliveryZone || "Local Parvathapur (0-3 km)",
+    "Courier Partner": orderData.customer.deliveryPartner || "Rapido / Kitchen Rider",
+    "Ordered Pickles": itemsList,
+    "Subtotal": `₹${orderData.totals.subtotal}`,
+    "Discount": orderData.totals.discountAmount > 0 ? `-₹${orderData.totals.discountAmount}` : "₹0",
+    "Delivery Fee": orderData.totals.deliveryFee === 0 ? "FREE" : `₹${orderData.totals.deliveryFee}`,
+    "Total Payable": `₹${orderData.totals.grandTotal}`,
+    "Payment Mode": String(orderData.paymentMode || "COD").toUpperCase(),
+    "Payment Status": orderData.status,
+    "UPI UTR / Reference": orderData.customer.utr || "N/A"
+  };
+
+  try {
+    const response = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(emailTarget)}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(emailPayload)
+    });
+
+    const data = await response.json();
+    if (data.success === "true" || data.success === true) {
+      console.log("📧 Order notification email successfully dispatched to", emailTarget);
+    } else {
+      console.log("📧 Email notification response:", data);
+    }
+  } catch (error) {
+    console.error("Error sending order email notification:", error);
+  }
 }
 
 // Show Order Success Confirmation (replaces WhatsApp redirect)
@@ -1265,19 +1321,65 @@ function showOrderSuccessConfirmation(orderData) {
         <p class="text-emerald-600 mt-1">We will prepare your pickle and deliver it soon. For any queries call <a href="tel:8341643180" class="font-bold text-emerald-900 underline">8341643180</a></p>
       </div>
 
-      <button onclick="document.getElementById('order-success-modal').remove()" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-extrabold rounded-2xl shadow-lg transition text-sm">
-        ✓ Done — Continue Shopping
-      </button>
+      <div class="space-y-2">
+        <a 
+          href="mailto:vinaypalsam8@gmail.com?subject=${encodeURIComponent('🌶️ New Order: ' + orderData.orderId + ' - ₹' + orderData.totals.grandTotal)}&body=${encodeURIComponent(generateOrderEmailBody(orderData))}"
+          class="w-full py-2.5 px-4 bg-sky-700 hover:bg-sky-800 text-white font-bold rounded-2xl text-xs flex items-center justify-center gap-2 shadow-md transition"
+        >
+          <span>📧 Open in Gmail / Email to vinaypalsam8@gmail.com</span>
+        </a>
+
+        <button onclick="document.getElementById('order-success-modal').remove()" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-extrabold rounded-2xl shadow-lg transition text-sm">
+          ✓ Done — Continue Shopping
+        </button>
+      </div>
     </div>
   `;
 
   document.body.appendChild(modal);
 
-  // Auto-close after 30 seconds
+  // Auto-close after 45 seconds
   setTimeout(() => {
     const m = document.getElementById("order-success-modal");
     if (m) m.remove();
-  }, 30000);
+  }, 45000);
+}
+
+// Generate Plain-Text Order Summary for Email
+function generateOrderEmailBody(orderData) {
+  const itemsText = orderData.items.map((i, idx) => 
+    `  ${idx + 1}. ${i.name} (${i.weight}) x ${i.quantity} = Rs.${i.unitPrice * i.quantity}`
+  ).join("\n");
+
+  return `🌶️ NEW ORDER - AMMA RUCHULU 🌶️
+==============================
+Order ID: ${orderData.orderId}
+Date & Time: ${orderData.timestamp}
+==============================
+
+CUSTOMER DETAILS:
+• Name: ${orderData.customer.fullName}
+• Mobile: ${orderData.customer.phone}
+• Delivery Address: ${orderData.customer.streetAddress}
+• Landmark / Area: ${orderData.customer.landmark || "N/A"}
+• Pincode: ${orderData.customer.pincode || "500098"}
+• Delivery Zone: ${orderData.customer.deliveryZone || "Local Parvathapur"}
+• Courier Partner: ${orderData.customer.deliveryPartner || "Kitchen Rider / Rapido"}
+
+ORDERED PICKLES:
+${itemsText}
+
+BILLING:
+• Subtotal: Rs.${orderData.totals.subtotal}
+• Discount: Rs.${orderData.totals.discountAmount || 0}
+• Delivery Fee: Rs.${orderData.totals.deliveryFee}
+• TOTAL PAYABLE: Rs.${orderData.totals.grandTotal}
+• Payment Mode: ${String(orderData.paymentMode).toUpperCase()}
+• Payment Status: ${orderData.status}
+• UPI UTR: ${orderData.customer.utr || "N/A"}
+
+Store Kitchen: Sai Aishwarya Colony, Parvathapur, Hyderabad
+Store Phone: +91 8341643180`;
 }
 
 // Supabase Cloud Configuration (Active Cloud Database)
